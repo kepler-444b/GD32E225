@@ -1,0 +1,308 @@
+version: "4.1"
+name: GD32E225
+type: ARM
+deviceName: null
+packDir: null
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders:
+    - name: Application
+      files:
+        - path: ../gd32e23x_it.c
+        - path: ../main.c
+        - path: ../systick.c
+      folders: []
+    - name: CMSIS
+      files:
+        - path: ../../Firmware/CMSIS/GD/GD32E23x/Source/system_gd32e23x.c
+      folders: []
+    - name: Peripherals
+      files:
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_adc.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_cmp.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_crc.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_dbg.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_dma.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_exti.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_fmc.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_fwdgt.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_gpio.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_i2c.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_misc.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_pmu.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_rcu.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_rtc.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_spi.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_syscfg.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_timer.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_usart.c
+        - path: ../../Firmware/GD32E23x_standard_peripheral/Source/gd32e23x_wwdgt.c
+      folders: []
+    - name: Startup
+      files:
+        - path: ../../Firmware/CMSIS/GD/GD32E23x/Source/ARM/startup_gd32e23x.s
+      folders: []
+    - name: Utilities
+      files:
+        - path: ../../Utilities/gd32e230c_eval.c
+      folders: []
+    - name: Doc
+      files:
+        - path: ../readme.txt
+      folders: []
+    - name: plcp_common
+      files:
+        - path: ../../Source/plcp_common/Inc/APP_RxBuffer.h
+        - path: ../../Source/plcp_common/Inc/APP_TxBuffer.h
+        - path: ../../Source/plcp_common/Inc/Common.h
+        - path: ../../Source/plcp_common/Inc/lmexxx_conf.h
+        - path: ../../Source/plcp_common/Inc/Uapps.h
+        - path: ../../Source/plcp_common/Src/APP_PublicAttribute.c
+        - path: ../../Source/plcp_common/Src/APP_RxBuffer.c
+        - path: ../../Source/plcp_common/Src/APP_TxBuffer.c
+        - path: ../../Source/plcp_common/Src/LmeUtils.c
+        - path: ../../Source/plcp_common/Src/Uapps.c
+        - path: ../../Source/plcp_common/Src/UappsRSL.c
+      folders: []
+    - name: plcp_device
+      files:
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel.c
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel.h
+        - path: ../../Source/plcp_device/APP_PublicAttribute.h
+        - path: ../../Source/plcp_device/APP_UserProcess.c
+        - path: ../../Source/plcp_device/CmdDemo.c
+        - path: ../../Source/plcp_device/main.c
+        - path: ../../Source/plcp_device/MseProcess.c
+        - path: ../../Source/plcp_device/MseProcess.h
+        - path: ../../Source/plcp_device/UappsProduct_Init.c
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_api.c
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_api.h
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_info.c
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_info.h
+        - path: ../../Source/plcp_device/plcp_panel/attr_table.c
+        - path: ../../Source/plcp_device/plcp_panel/attr_table.h
+        - path: ../../Source/plcp_device/plcp_panel/button_state.c
+        - path: ../../Source/plcp_device/plcp_panel/button_state.h
+        - path: ../../Source/plcp_device/plcp_panel/panel_adapter.c
+        - path: ../../Source/plcp_device/plcp_panel/panel_adapter.h
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_callbacks.c
+        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_callbacks.h
+        - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_adapter.c
+        - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_adapter.h
+        - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_attr_table.c
+        - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_attr_table.h
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct.c
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct.h
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.c
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.h
+      folders: []
+    - name: cJSON
+      files:
+        - path: ../../Source/cJSON/cJSON.c
+        - path: ../../Source/cJSON/cJSON.h
+        - path: ../../Source/cJSON/cJSON_Utils.c
+        - path: ../../Source/cJSON/cJSON_Utils.h
+      folders: []
+    - name: base
+      files:
+        - path: ../../Source/base/base.c
+        - path: ../../Source/base/base.h
+        - path: ../../Source/base/debug.h
+        - path: ../../Source/base/panel_base.c
+        - path: ../../Source/base/panel_base.h
+      folders: []
+    - name: common
+      files:
+        - path: ../../Source/adc/adc.c
+        - path: ../../Source/adc/adc.h
+        - path: ../../Source/gpio/gpio.c
+        - path: ../../Source/gpio/gpio.h
+        - path: ../../Source/protocol/protocol.c
+        - path: ../../Source/protocol/protocol.h
+        - path: ../../Source/flash/flash.c
+        - path: ../../Source/flash/flash.h
+        - path: ../../Source/eventbus/eventbus.c
+        - path: ../../Source/eventbus/eventbus.h
+        - path: ../../Source/pwm/curve_table.h
+        - path: ../../Source/pwm/pwm.c
+        - path: ../../Source/pwm/pwm.h
+        - path: ../../Source/watchdog/watchdog.c
+        - path: ../../Source/watchdog/watchdog.h
+        - path: ../../Source/zero/zero.c
+        - path: ../../Source/zero/zero.h
+        - path: ../../Source/usart/usart.c
+        - path: ../../Source/usart/usart.h
+        - path: ../../Source/timer/timer.c
+        - path: ../../Source/timer/timer.h
+        - path: ../../Source/pwm/pwm_hw.c
+        - path: ../../Source/pwm/pwm_hw.h
+      folders: []
+    - name: device_manager
+      files:
+        - path: ../../Source/device/device_manager.h
+        - path: ../../Source/device/jump_device.c
+        - path: ../../Source/device/jump_device.h
+      folders: []
+    - name: plcp_user_api
+      files:
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_bind.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_bind.h
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_callback.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_callback.h
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_scene.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_scene.h
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sdk_api.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sdk_api.h
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sequentialData.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sequentialData.h
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_special_scene.c
+        - path: ../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h
+      folders: []
+    - name: ::CMSIS
+      files: []
+      folders: []
+    - name: RTT
+      files:
+        - path: ../../Source/rtt/SEGGER_RTT.c
+        - path: ../../Source/rtt/SEGGER_RTT.h
+        - path: ../../Source/rtt/SEGGER_RTT_Conf.h
+        - path: ../../Source/rtt/SEGGER_RTT_printf.c
+      folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: f192158ed89e8c1e296ac8c90ab1869d
+targets:
+  GD32E23x:
+    cppPreprocessAttrs:
+      defineList:
+        - GD32E230
+      incList:
+        - ../../Firmware/CMSIS
+        - ../../Utilities
+        - ..
+        - ../../Utilities/LCD_Commom
+        - ../../Firmware/GD32E23x_standard_peripheral/Include
+        - ../../Firmware/CMSIS/GD/GD32E23x/Include
+        - .cmsis/include
+        - RTE/_GD32E23x
+      libList: []
+    excludeList: []
+    toolchain: AC6
+    toolchainConfigMap:
+      AC6:
+        archExtensions: ""
+        cpuType: Cortex-M23
+        floatingPointHardware: none
+        options:
+          version: 3
+          afterBuildTasks: []
+          asm-compiler:
+            $use: asm-auto
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            language-c: c99
+            language-cpp: c++11
+            one-elf-section-per-function: true
+            optimization: level-2
+            short-enums#wchar: true
+            warnings: ac5-like-warnings
+          global:
+            output-debug-info: enable
+            use-microLIB: true
+          linker:
+            $outputTaskExcludes:
+              - .bin
+              - .s19
+            misc-controls: --diag_suppress=L6329
+            output-format: elf
+            ro-base: "0x08000000"
+            rw-base: "0x20000000"
+        scatterFilePath: output/Project.sct
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 3
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x4000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 3
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x20000"
+                startAddr: "0x8000000"
+              tag: IROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: IROM
+        useCustomScatterFile: false
+    uploadConfigMap:
+      JLink:
+        baseAddr: ""
+        bin: ""
+        cpuInfo:
+          cpuName: GD32E235C8T6
+          vendor: GigaDevice
+        otherCmds: ""
+        proType: 1
+        speed: 8000
+    uploader: JLink
