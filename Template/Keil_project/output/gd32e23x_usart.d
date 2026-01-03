@@ -2,7 +2,7 @@
   ..\..\Firmware\GD32E23x_standard_peripheral\Source\gd32e23x_usart.c \
   ..\..\Firmware\GD32E23x_standard_peripheral\Include\gd32e23x_usart.h \
   ..\..\Firmware\CMSIS\GD\GD32E23x\Include\gd32e23x.h \
-  D:\Keil\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\Core\Include\core_cm23.h \
+  D:\keil\arm\ARM\CMSIS\6.1.0\CMSIS\Core\Include\core_cm23.h \
   ..\..\Firmware\CMSIS\GD\GD32E23x\Include\system_gd32e23x.h \
   ..\gd32e23x_libopt.h \
   ..\..\Firmware\GD32E23x_standard_peripheral\Include\gd32e23x_adc.h \

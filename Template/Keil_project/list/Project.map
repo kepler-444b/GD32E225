@@ -1,4 +1,4 @@
-Component: Arm Compiler for Embedded 6.24 Tool: armlink [5f371500]
+Component: Arm Compiler for Embedded 6.23 Tool: armlink [5f102400]
 
 ==============================================================================
 
@@ -5178,7 +5178,7 @@ Removing Unused input sections from the image.
     Removing cjson_utils.o(.ARM.exidx.text.compose_patch), (8 bytes).
     Removing cjson_utils.o(.text.cJSONUtils_GeneratePatches), (48 bytes).
     Removing cjson_utils.o(.ARM.exidx.text.cJSONUtils_GeneratePatches), (8 bytes).
-    Removing cjson_utils.o(.text.create_patches), (772 bytes).
+    Removing cjson_utils.o(.text.create_patches), (768 bytes).
     Removing cjson_utils.o(.ARM.exidx.text.create_patches), (8 bytes).
     Removing cjson_utils.o(.text.cJSONUtils_GeneratePatchesCaseSensitive), (48 bytes).
     Removing cjson_utils.o(.ARM.exidx.text.cJSONUtils_GeneratePatchesCaseSensitive), (8 bytes).
@@ -5462,7 +5462,7 @@ Removing Unused input sections from the image.
     Removing dflti.o(.text), (40 bytes).
     Removing f2d.o(.text), (40 bytes).
 
-1889 unused section(s) (total 65051 bytes) removed from the image.
+1889 unused section(s) (total 65047 bytes) removed from the image.
 
 ==============================================================================
 
@@ -7927,59 +7927,59 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       288         12          0          0          8       3263   adc.o
-       532        152        108          0         18       5303   app_publicattribute.o
-       260         16          0          0        536       2027   app_rxbuffer.o
-       244         32         39          0       2294       3209   app_txbuffer.o
-      1186        104         14          0          0      11953   app_userprocess.o
-      1670        236          0          0         72      20824   attr_table.o
-        94          0          0          0          0       4423   base.o
-      6346        116         19         12          8      69989   cjson.o
-       712        236          0          0          0       6964   cmddemo.o
-       176         24          0          0        164       2479   eventbus.o
-       270          4          0          0          0       4343   flash.o
-       500         28          0          0          0       8795   gd32e23x_adc.o
-       420         24          0          0          0       6795   gd32e23x_dma.o
-       808         24          0          0          0      24330   gd32e23x_fmc.o
-       188         28          0          0          0       3896   gd32e23x_fwdgt.o
-       730         24          0          0          0       6054   gd32e23x_gpio.o
-        26          0          0          0          0       1039   gd32e23x_it.o
-       108         20          0          0          0       3898   gd32e23x_misc.o
-       960         72          8          0          0      15744   gd32e23x_rcu.o
-        16          4          0          0          0       3062   gd32e23x_syscfg.o
-      1150         64          0          0          0      21361   gd32e23x_timer.o
-       460         28          0          0          0      14191   gd32e23x_usart.o
-         4          0          0          0          0        525   jump_device.o
-       362         28         10          0          0       2905   light_ct_adapter.o
-        60         24          0          0          0       3523   light_ct_attr_table.o
-       132          0          0          0          0       8324   lmeutils.o
-       132         56          0          0          0        692   main.o
-      4132        404         91        480          0      25980   mseprocess.o
-       708        108          0          0          0       9947   panel_adapter.o
-      5736        908        149          0       1118      21745   plcp_bind.o
-       108         24        130        511          0       1813   plcp_callback.o
-        88         36          0          0         16       3491   plcp_light_ct_info.o
-       866        132          0         24         42       5640   plcp_panel.o
-       732        160          0          0         32       3198   plcp_panel_api.o
-       452         84          0          0        136       2344   plcp_panel_info.o
-      9572        708        190          0       2917      32868   plcp_scene.o
-        66          0          0          0          0       1866   plcp_sdk_api.o
-      1048        324         12          0        202       5411   plcp_special_scene.o
-        22          4          0          0          0       3481   protocol.o
-      1276        152       2002          8         88       6025   pwm_hw.o
-        68         22        204          0       2048        712   startup_gd32e23x.o
-       460         28          0          4          0       2476   system_gd32e23x.o
-       120         20          0          0          4       2970   systick.o
-      1288         32          0          0        404       6984   timer.o
-      4612         28          0          2          2      44297   uapps.o
-      1332        156       1075          0        934      12151   uappsproduct_init.o
-       586          4          3          0          0       6855   uappsrsl.o
-       760         72          0          0        525       6232   usart.o
-       164         20          0          0          0       2674   watchdog.o
-       102         20          0          0          8       2036   zero.o
+       288         12          0          0          8       3250   adc.o
+       532        152        108          0         18       5290   app_publicattribute.o
+       260         16          0          0        536       2014   app_rxbuffer.o
+       244         32         39          0       2294       3196   app_txbuffer.o
+      1186        104         14          0          0      11940   app_userprocess.o
+      1670        236          0          0         72      20811   attr_table.o
+        94          0          0          0          0       4410   base.o
+      6346        116         19         12          8      69976   cjson.o
+       712        236          0          0          0       6951   cmddemo.o
+       176         24          0          0        164       2466   eventbus.o
+       270          4          0          0          0       4330   flash.o
+       500         28          0          0          0       8782   gd32e23x_adc.o
+       420         24          0          0          0       6782   gd32e23x_dma.o
+       808         24          0          0          0      24317   gd32e23x_fmc.o
+       188         28          0          0          0       3883   gd32e23x_fwdgt.o
+       730         24          0          0          0       6041   gd32e23x_gpio.o
+        26          0          0          0          0       1026   gd32e23x_it.o
+       108         20          0          0          0       3879   gd32e23x_misc.o
+       960         72          8          0          0      15731   gd32e23x_rcu.o
+        16          4          0          0          0       3049   gd32e23x_syscfg.o
+      1150         64          0          0          0      21348   gd32e23x_timer.o
+       460         28          0          0          0      14178   gd32e23x_usart.o
+         4          0          0          0          0        512   jump_device.o
+       362         28         10          0          0       2892   light_ct_adapter.o
+        60         24          0          0          0       3510   light_ct_attr_table.o
+       132          0          0          0          0       8311   lmeutils.o
+       132         56          0          0          0        679   main.o
+      4132        404         91        480          0      25967   mseprocess.o
+       708        108          0          0          0       9934   panel_adapter.o
+      5736        908        149          0       1118      21732   plcp_bind.o
+       108         24        130        511          0       1800   plcp_callback.o
+        88         36          0          0         16       3478   plcp_light_ct_info.o
+       866        132          0         24         42       5627   plcp_panel.o
+       732        160          0          0         32       3185   plcp_panel_api.o
+       452         84          0          0        136       2331   plcp_panel_info.o
+      9572        708        190          0       2917      32855   plcp_scene.o
+        66          0          0          0          0       1853   plcp_sdk_api.o
+      1048        324         12          0        202       5398   plcp_special_scene.o
+        22          4          0          0          0       3468   protocol.o
+      1276        152       2002          8         88       6012   pwm_hw.o
+        68         22        204          0       2048        696   startup_gd32e23x.o
+       460         28          0          4          0       2463   system_gd32e23x.o
+       120         20          0          0          4       2951   systick.o
+      1288         32          0          0        404       6971   timer.o
+      4612         28          0          2          2      44284   uapps.o
+      1332        156       1075          0        934      12138   uappsproduct_init.o
+       586          4          3          0          0       6842   uappsrsl.o
+       760         72          0          0        525       6219   usart.o
+       164         20          0          0          0       2661   watchdog.o
+       102         20          0          0          8       2023   zero.o
 
     ----------------------------------------------------------------------
-     52164       4802       4088       1044      11616     471107   Object Totals
+     52164       4802       4088       1044      11616     470442   Object Totals
          0          0         32          0          0          0   (incl. Generated)
         32          0          2          3         40          0   (incl. Padding)
 
@@ -8079,8 +8079,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     60346       5104       4222       1064      11616     472835   Grand Totals
-     60346       5104       4222        480      11616     472835   ELF Image Totals (compressed)
+     60346       5104       4222       1064      11616     472170   Grand Totals
+     60346       5104       4222        480      11616     472170   ELF Image Totals (compressed)
      60346       5104       4222        480          0          0   ROM Totals
 
 ==============================================================================
