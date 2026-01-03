@@ -406,11 +406,11 @@ ARM Macro Assembler    Page 7
               00000000 
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M23 --dep
 end=.\output\startup_gd32e23x.d -o.\output\startup_gd32e23x.o -I.\RTE\_GD32E23x
- -ID:\keil\arm\ARM\CMSIS\6.1.0\CMSIS\Core\Include -ID:\keil\arm\GigaDevice\GD32
-E23x_DFP\2.3.2\Device\Include --predefine="__MICROLIB SETA 1" --predefine="__UV
-ISION_VERSION SETA 542" --predefine="GD32E23x SETA 1" --predefine="_RTE_ SETA 1
-" --list=.\list\startup_gd32e23x.lst ..\..\Firmware\CMSIS\GD\GD32E23x\Source\AR
-M\startup_gd32e23x.s
+ -ID:\Keil\ARM\Packs\ARM\CMSIS\6.2.0\CMSIS\Core\Include -ID:\Keil\ARM\Packs\Gig
+aDevice\GD32E23x_DFP\2.3.2\Device\Include --predefine="__MICROLIB SETA 1" --pre
+define="__UVISION_VERSION SETA 543" --predefine="GD32E23x SETA 1" --predefine="
+_RTE_ SETA 1" --list=.\list\startup_gd32e23x.lst ..\..\Firmware\CMSIS\GD\GD32E2
+3x\Source\ARM\startup_gd32e23x.s
 
 
 
