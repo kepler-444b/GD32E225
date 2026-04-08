@@ -9,7 +9,7 @@
 #define FLASH_BIND_INFO_H_START_ADD 0x08016800UL // 90页
 
 #define MAX_BIND_MSG_LEN            64
-#define MAX_BIND_TABLE_SIZE         8
+#define MAX_BIND_TABLE_SIZE         12
 /*--------------------------------------------------------------
 函数名称：PLCP_bindTableWrite
 函数功能：写入绑定
@@ -27,6 +27,8 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg);
 返回值：  	null - 失败
 备 注：
 ---------------------------------------------------------------*/
+typedef char aei_t[KEY_NUMBER];
+uint8_t PLCP_BindTableRead_aei(const char *group_num, const char *cmd, aei_t out_aei[], uint8_t max_num);
 char *PLCP_bindTableRead(uint8_t se, char *aei, char *id);
 
 /*--------------------------------------------------------------

@@ -4,7 +4,9 @@
 #include <stdint.h>
 char *PLCP_Callback_Product(void);
 char *PLCP_Callback_Ae(void);
-char *PLCP_Callback_Widgets(void);
+char *PLCP_Callback_Widgets(void); 
+
 uint8_t PlcSdkCallbackOnOff(char *aei, uint8_t OnOff);
+uint8_t PlcSdkCallbackAeiToIndex(char *aei);
 
 #endif

@@ -43,8 +43,8 @@
 #define SCENE2_NUM                        16
 
 #define CH_SCENE_NUM                      4
-#define LED_SCENE_NUM                     4
-#define AD_LED_SCENE_NUM                  4
+#define LED_SCENE_NUM                     KEY_NUMBER
+#define AD_LED_SCENE_NUM                  KEY_NUMBER
 #define CH_GROUP_NUM                      4
 #define LED_GROUP_NUM                     4
 
@@ -166,21 +166,35 @@ uint8_t APP_IsHaveSceneId_Device(uint16_t sceneNumber);
 
 uint8_t APP_Scene_Join(uint8_t *buf, uint16_t len, const char *aei);
 uint8_t APP_Scene_Quit(uint8_t *buf, uint16_t len, const char *aei);
+uint8_t APP_Scene_Dele(uint8_t *buf, uint16_t len, const char *aei);
 uint16_t APP_Scene_List(uint8_t *buf, const char *aei);
 uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei);
+uint16_t APP_Scene_Copy_Put(uint8_t *buf, uint16_t len);
 
 void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei);
 void APP_Device_SceneClose(UappsMessage *uappsMsg, const char *aei);
 
 uint8_t APP_Group_Join(uint8_t *buf, uint16_t len, const char *aei);
 uint8_t APP_Group_Quit(uint8_t *buf, uint16_t len, const char *aei);
-void APP_Device_GroupClose(UappsMessage *uappsMsg, const char *aei);
-void APP_Device_GroupState(UappsMessage *uappsMsg, const char *aei);
+void APP_Device_GroupOff(UappsMessage *uappsMsg, const char *aei);
+void APP_Device_GroupOn(UappsMessage *uappsMsg, const char *aei);
+
+void APP_Device_GroupOpen(UappsMessage *uappsMsg, RSL_t *rsl);
+void APP_Device_GroupClose(UappsMessage *uappsMsg, RSL_t *rsl);
+void APP_Device_GroupStop(UappsMessage *uappsMsg, RSL_t *rsl);
 
 uint16_t APP_Group_List(uint8_t *buf, const char *aei);
 
 bool APP_ReadAllSceneInfo(void);
 bool APP_ReadAllGroupInfo(void);
+
+typedef struct {
+    uint8_t is_exe;
+
+    uint16_t count;
+} curtain_t;
+void APP_Curtain_timer(void);
+const curtain_t *APP_GetCurtain(uint8_t index);
 
 /***********************************函数声明 结束************************************/
 #endif

@@ -26,6 +26,7 @@
 #define FLASH_WRITE_POSTWRIET_FLAG 0x08017C00U // 95 页(存放)
 
 typedef enum {
+    MSE_SET_McuVer   = 0x01,
     MSE_Load_Product = 0x23,
     MSE_GET_selfMAC,
     MSE_GET_DID,
@@ -273,17 +274,20 @@ typedef enum {
     COUTN_TYPE       = 0x06, // 倒计时类
     INPUT_CHECK      = 0x07, // 输入检测类
     ADJUST_BLCK_TYPE = 0x08, // 可调按键背光类
+    NULL_TYPE        = 0x10, // 没有载荷
 
 } STATE_e;
 
 typedef enum {
 
-    KJ_MODE        = 0x00, // 控件属性
-    REPOD_TYPE     = 0x1F, // 上报方式属性
-    ENABLE_LED     = 0x01, // 按键的按键灯使能
-    RELAY_POWER_UP = 0x04, // 继电器的上电状态
-    BATTERY_LEVEL  = 0x05, // 电池电量状态
-    SCENE_LINK     = 0x06, // 场景联动属性
+    KJ_MODE          = 0x00, // 控件属性 01场景按键;04继电器;06窗帘按键
+    REPORT_TYPE      = 0x1F, // 上报方式属性
+    ENABLE_LED       = 0x01, // 按键的按键灯使能
+    RELAY_POWER_UP   = 0x04, // 继电器的上电状态
+    BATTERY_LEVEL    = 0x05, // 电池电量状态
+    SCENE_LINK       = 0x06, // 场景联动属性
+    KEY_NUM          = 0x07, // 设置按键数量
+    NULL_TYPE_CONFIG = 0x10,
 } CONFIG_e;
 
 uint8_t MCU_Get_Devicestatus(uint8_t *buf, uint8_t type, uint16_t bits);

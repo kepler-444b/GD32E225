@@ -5,18 +5,22 @@
 #include "../../Source/eventbus/eventbus.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
-#include "../../Source/plcp_device/plcp_panel/plcp_panel_callbacks.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_bind.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/plcp_sdk_api.h"
+#include "../Source/plcp_device/plcp_user_api/PLCP_callback.h"
 #include "systick.h"
 
-#define MSE_SERVICE_NUM 16
+#define MSE_SERVICE_NUM 20
 static ServiceEntityAttribute gMSEService[MSE_SERVICE_NUM] =
     {
-        MSE_DEVICE_ONPEN,
+        MSE_DEVICE_ON,
+        MSE_DEVICE_OFF,
+        MSE_DEVICE_OPEN,
         MSE_DEVICE_CLOSE,
+        MSE_DEVICE_STOP,
+
         MSE_DEVICE_SET_CONFIG,
 
         MSE_DEVICE_GROUP_JOIN,
@@ -25,6 +29,7 @@ static ServiceEntityAttribute gMSEService[MSE_SERVICE_NUM] =
 
         MSE_DEVICE_SCENE_JOIN,
         MSE_DEVICE_SCENE_QUIT,
+        MSE_DEVICE_SCENE_DELE,
         MSE_DEVICE_SCENE_LIST,
         MSE_DEVICE_SCENE_COPY,
 
@@ -120,17 +125,16 @@ void APP_STATE_OFF_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch
 void APP_STATE_SET_CONFIG(UappsMessage *uappsMsg)
 {
     APP_PRINTF("APP_STATE_SET_CONFIG\n");
+
+    uint8_t type = NULL_TYPE; // 默认没有载荷
+    if (uappsMsg->pl_ptr != NULL) {
+        type = uappsMsg->pl_ptr[0];
+    }
+
     uapps_rw_buffer_t scratch;
-
-    uint8_t type = uappsMsg->pl_ptr[0]; // 命令类型
-
     uint16_t bits = ((uint16_t)uappsMsg->pl_ptr[1] << 8) | uappsMsg->pl_ptr[2]; // 控制字
 
-    uint8_t ackBuf[3 + COUNT_ONES_16(bits)]; // 根据number来定义ACK载荷的长度
-    ackBuf[0] = type;
-    ackBuf[1] = (bits >> 8) & 0xFF;
-    ackBuf[2] = bits & 0xFF;
-
+    uint8_t ackBuf[256];
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint16_t ackLen = 0;
     uint8_t payloadFlag = 0;
@@ -141,15 +145,11 @@ void APP_STATE_SET_CONFIG(UappsMessage *uappsMsg)
 
     } else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) {
         respondCode = UAPPS_ACK_CONTENT;
-        ackLen = dev.Get_Config(&ackBuf[3], type, bits);
+        ackLen = dev.Get_Config(ackBuf, type, bits);
         payloadFlag = 1;
         scratch.p = ackBuf;
         if (ackLen != 0) {
-#if defined PLCP_PANEL
-            scratch.len = ackLen + 3;
-#elif defined PLCP_LIGHT_CT
             scratch.len = ackLen;
-#endif
         }
     }
     if (uappsMsg->hdr.type == UAPPS_TYPE_CON) // 判断收到的报文内是否需要进行回复
@@ -162,36 +162,27 @@ void APP_STATE_DEVICESTATE(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
 {
     const sPublic_attribute *pAttributeOfAPP = APP_Attribute_GetPointer();
 
-    uint8_t type = uappsMsg->pl_ptr[0];                                         // 控件类型
+    uint8_t type = NULL_TYPE; // 默认没有载荷
+    if (uappsMsg->pl_ptr != NULL) {
+        type = uappsMsg->pl_ptr[0];
+    }
+
     uint16_t bits = ((uint16_t)uappsMsg->pl_ptr[1] << 8) | uappsMsg->pl_ptr[2]; // 控制字
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint16_t ackLen = 0;
     uint8_t payloadFlag = 0;
 
-#if defined PLCP_PANEL
-    uint8_t ackBuf[3 + COUNT_ONES_16(bits)]; // 根据number来定义ACK载荷的长度
-    ackBuf[0] = type;
-    ackBuf[1] = (bits >> 8) & 0xFF;
-    ackBuf[2] = bits & 0xFF;
-#elif defined PLCP_LIGHT_CT
-    uint8_t ackBuf[6];
-#endif
+    uint8_t ackBuf[256]; // 根据number来定义ACK载荷的长度
+
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) { // 获取状态
         respondCode = UAPPS_ACK_CONTENT;
-#if defined PLCP_PANEL
-        ackLen = dev.Device_Getstate(&ackBuf[3], type, bits);
-#elif defined PLCP_LIGHT_CT
         ackLen = dev.Device_Getstate(ackBuf, type, bits);
-#endif
         payloadFlag = 1;
         scratch->p = ackBuf;
         if (ackLen != 0) {
-#if defined PLCP_PANEL
-            scratch->len = ackLen + 3;
-#elif defined PLCP_LIGHT_CT
             scratch->len = ackLen;
-#endif
         }
+
     } else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) { // 设置状态
         respondCode = UAPPS_ACK_CHANGED;
         dev.Device_Putstate(uappsMsg->pl_ptr, uappsMsg->pl_len);
@@ -237,8 +228,9 @@ void APP_ResetService(UappsMessage *uappsMsg)
 
 void APP_STATE_GET_MCUVER(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
 {
+#if 0
     uint8_t respondCode = UAPPS_BAD_REQUEST;
-    uint8_t ackBuf[64];
+    uint8_t ackBuf[24];
     uint8_t payloadFlag = 0;
     uint16_t ackLen = 0;
 
@@ -249,11 +241,7 @@ void APP_STATE_GET_MCUVER(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
         payloadFlag = 1;
         scratch->p = ackBuf;
         if (ackLen != 0) {
-#if defined PLCP_PANEL
-            scratch->len = ackLen + 3;
-#elif defined PLCP_LIGHT_CT
             scratch->len = ackLen;
-#endif
         }
     }
     // 回复ACK
@@ -261,6 +249,7 @@ void APP_STATE_GET_MCUVER(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
     {
         APP_SendACK(uappsMsg, payloadFlag, scratch, UAPPS_TYPE_ACK, respondCode);
     }
+#endif
 }
 
 void APP_STATE_GROUP_JOIN(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch, const char *aei)
@@ -368,11 +357,31 @@ void APP_STATE_SCENE_QUIT(UappsMessage *uappsMsg, const char *aei)
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
         // 删除指定场景
         err = APP_Scene_Quit(uappsMsg->pl_ptr, uappsMsg->pl_len, aei);
-        // static test my_test;
-        // my_test.buf = uappsMsg->pl_ptr;
-        // my_test.len = uappsMsg->pl_len;
-        // my_test.aei = aei;
-        // app_eventbus_publish(PLCP_COPY_GET, &my_test);
+    }
+    if (err == 0) {
+        respondCode = UAPPS_ACK_CHANGED;
+    }
+
+    // 回复ACK
+    if (uappsMsg->hdr.type == UAPPS_TYPE_CON) // 判断收到的报文内是否需要进行回复
+    {
+        APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
+    }
+}
+
+// 删除场景列表
+void APP_STATE_SCENE_DELE(UappsMessage *uappsMsg, const char *aei)
+{
+    uint8_t respondCode = UAPPS_BAD_REQUEST;
+    uint8_t payloadFlag = 0;
+    uint8_t err = 0;
+    uapps_rw_buffer_t scratch;
+    memset(&scratch, 0, sizeof(scratch));
+
+    APP_PRINTF("enter SCENE_DELE\n");
+    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
+        // 删除指定场景
+        err = APP_Scene_Dele(uappsMsg->pl_ptr, uappsMsg->pl_len, aei);
     }
     if (err == 0) {
         respondCode = UAPPS_ACK_CHANGED;
@@ -422,7 +431,7 @@ void APP_STATE_SCENE_COPY(UappsMessage *uappsMsg, const char *aei)
     uapps_rw_buffer_t scratch;
     memset(&scratch, 0, sizeof(scratch));
 
-    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) {
+    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) { // GET
         respondCode = UAPPS_ACK_CONTENT;
         ackLen = APP_Scene_Copy_Get(ackBuf, aei); // 将场景参数添加到载荷中进行回复
         payloadFlag = 1;
@@ -430,19 +439,19 @@ void APP_STATE_SCENE_COPY(UappsMessage *uappsMsg, const char *aei)
         if (ackLen != 0) {
             scratch.len = ackLen;
         }
-    }
-    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
-        respondCode = UAPPS_ACK_CONTENT;
-        ackLen = APP_Scene_Copy_Get(ackBuf, aei); // 将场景参数添加到载荷中进行回复
-        payloadFlag = 1;
-        scratch.p = ackBuf;
-        if (ackLen != 0) {
-            scratch.len = ackLen;
+        if (uappsMsg->hdr.type == UAPPS_TYPE_CON) // 判断收到的报文内是否需要进行回复
+        {
+            APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
         }
     }
-    if (uappsMsg->hdr.type == UAPPS_TYPE_CON) // 判断收到的报文内是否需要进行回复
-    {
-        APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
+
+    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) { // PUT
+        respondCode = UAPPS_ACK_CONTENT;
+        APP_Scene_Copy_Put(uappsMsg->pl_ptr, uappsMsg->pl_len); // 将场景参数添加到载荷中进行回复
+        if (uappsMsg->hdr.type == UAPPS_TYPE_CON)               // 判断收到的报文内是否需要进行回复
+        {
+            APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
+        }
     }
 }
 
@@ -453,7 +462,7 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
     char eventAEI[AEI_MAX_LEN];
     char eventID[AEI_MAX_LEN];
     char msg[MAX_BIND_MSG_LEN];
-    uint8_t ackBuf[64];
+    uint8_t ackBuf[400];
 
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint16_t payloadFlag = 0;
@@ -462,11 +471,11 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) { // 写入绑定信息
         count = PLCP_CountBindDataInAddBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
         APP_PRINTF("count:%d\n", count);
+
         if (count > 0) {
             for (i = 0; i < count; i++) {
                 memset(&msg, 0, MAX_BIND_MSG_LEN);
                 if (1 == PLCP_GetBindDataInAddBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len, i, &eventSE, eventAEI, eventID, msg)) {
-                    APP_PRINTF("PLCP_GetBindDataInAddBindParam\n");
                     if (1 == PLCP_bindTableWrite(eventSE, eventAEI, eventID, msg)) {
                         APP_PRINTF("UAPPS_ACK_CHANGED\n");
                         respondCode = UAPPS_ACK_CHANGED;
@@ -476,11 +485,10 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
         }
     } else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_DELETE) { // 删除指定事件的绑定信息
         count = PLCP_CountEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
-        APP_PRINTF("count %d\n", count);
+
         if (count > 0 && count != 0xff) {
             for (i = 0; i < count; i++) {
-                if (1 == PLCP_GetEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len,
-                                                     i, &eventSE, eventAEI, eventID)) {
+                if (1 == PLCP_GetEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len, i, &eventSE, eventAEI, eventID)) {
                     APP_PRINTF("del bind %d\n", i);
                     if (1 == PLCP_bindTableDelet(eventSE, eventAEI, eventID)) {
                         respondCode = UAPPS_ACK_CHANGED;
@@ -513,9 +521,9 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
     }
 }
 
+// 自定义处理函数
 void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, uint8_t len)
 {
-    // APP_PRINTF("APP_TOPIC_MSEProcessin\n");
     uint8_t i = 0;
     uint8_t index = 0;
     uint8_t respondCode = UAPPS_BAD_REQUEST;
@@ -529,7 +537,17 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
             if (i > DEVICE_SCENE_COPY_e) { // 跟控制无关的内容无需判断did
                 break;
             }
-            if (pAttributeOfAPP->did == 0) {
+            if (pAttributeOfAPP->did == 0) { // 未入网
+                switch (i) {
+                case DEVICE_STATE_ON_E: // 未入网时候,需要"测试开"和"测试关"
+                    APP_STATE_ON_Processing(uappsMsg, &scratch, rsl);
+                    break;
+                case DEVICE_STATE_OFF_E:
+                    APP_STATE_OFF_Processing(uappsMsg, &scratch, rsl);
+                    break;
+                default:
+                    break;
+                }
                 if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {
                     uint8_t payloadFlag = 0;
                     respondCode = UAPPS_NOT_FOUND;
@@ -541,23 +559,18 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
         }
     }
     switch (i) {
-    case DEVICE_STATE_OPEN_E: { // 开机
+    case DEVICE_STATE_ON_E: { // 开机
         APP_STATE_ON_Processing(uappsMsg, &scratch, rsl);
         index++;
         break;
     }
-    case DEVICE_STATE_CLOSE_E: { // 关机
+    case DEVICE_STATE_OFF_E: { // 关机
         APP_STATE_OFF_Processing(uappsMsg, &scratch, rsl);
         index++;
         break;
     }
     case DEVICE_STATE_SET_CONFIG_E: { // 设置属性
         APP_STATE_SET_CONFIG(uappsMsg);
-        index++;
-        break;
-    }
-    case DEVICE_FACTORY_e: { // 恢复出厂设置
-        APP_RestoreFactorySettings(uappsMsg);
         index++;
         break;
     }
@@ -575,6 +588,10 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
         APP_STATE_ONOFF_DEVICESTATE(uappsMsg);
         index++;
     } break;
+    case DEVICE_FACTORY_e: {
+        APP_RestoreFactorySettings(uappsMsg);
+        index++;
+    } break;
     case DEVICE_MCUVER_e: {
         APP_STATE_GET_MCUVER(uappsMsg, &scratch);
         index++;
@@ -584,9 +601,6 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
         APP_BIND_Processing(uappsMsg, &scratch);
         index++;
     } break;
-    }
-    if (index > 0) {
-        // 本地状态改变保存
     }
 }
 
@@ -608,14 +622,28 @@ uint8_t APP_Group_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_
         }
     }
     switch (i) {
-    case DEVICE_STATE_e: { // 控制群组开
-        APP_Device_GroupState(uappsMsg, rsl->aei);
+    case DEVICE_STATE_ON_E: { // 控制群组开
+        APP_Device_GroupOn(uappsMsg, rsl->aei);
         index++;
     } break;
-    case DEVICE_STATE_CLOSE_E: { // 控制群组关
-        APP_Device_GroupClose(uappsMsg, rsl->aei);
+    case DEVICE_STATE_OFF_E: { // 控制群组关
+        APP_Device_GroupOff(uappsMsg, rsl->aei);
         index++;
     } break;
+
+    case DEVICE_STATE_OPEN_E: {
+        APP_Device_GroupOpen(uappsMsg, rsl);
+        index++;
+    } break;
+    case DEVICE_STATE_CLOSE_E: {
+        APP_Device_GroupClose(uappsMsg, rsl);
+        index++;
+    } break;
+    case DEVICE_STATE_STOP_E: {
+        APP_Device_GroupStop(uappsMsg, rsl);
+        index++;
+    } break;
+
     case DEVICE_GROUP_JOIN_e: { // 添加群组
         APP_STATE_GROUP_JOIN(uappsMsg, &scratch, rsl->aei);
         index++;
@@ -639,15 +667,18 @@ uint8_t APP_Group_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_
 
 void APP_Scene_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, uint8_t len)
 {
+    APP_PRINTF("APP_Scene_TOPIC_MSEProcessing\n");
     uint16_t i = 0;
     if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
         if (night_scene_state_get() == 0x02) {          // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
             delay_scene_stop();
         }
+
         if (night_scene_state_get() == 0x01) { // 当前是夜灯模式
             night_scene_close();
         }
     }
+
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp((char *)rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {
             break;
@@ -655,21 +686,23 @@ void APP_Scene_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *
     }
 
     switch (i) {
-    case DEVICE_STATE_OPEN_E: { // 启动场景
+    case DEVICE_STATE_ON_E: { // 启动场景
         APP_Device_SceneStart(uappsMsg, rsl->aei);
-        break;
-    }
-    case DEVICE_STATE_CLOSE_E: { //  关闭场景
+    } break;
+    case DEVICE_STATE_OFF_E: { // 关闭场景
         APP_Device_SceneClose(uappsMsg, rsl->aei);
     } break;
     case DEVICE_SCENE_JOIN_e: { // 添加场景
         APP_STATE_SCENE_JOIN(uappsMsg, rsl->aei);
         break;
     }
-    case DEVICE_SCENE_QUIT_e: { // 删除场景
+    case DEVICE_SCENE_QUIT_e: { // 退出场景
         APP_STATE_SCENE_QUIT(uappsMsg, rsl->aei);
         break;
     }
+    case DEVICE_SCENE_DELE_e: { // 删除场景列表
+        APP_STATE_SCENE_DELE(uappsMsg, rsl->aei);
+    } break;
     case DEVICE_SCENE_LIST_e: { // 查询场景
         APP_STATE_SCENE_LIST(uappsMsg, rsl->aei);
         break;
@@ -682,9 +715,9 @@ void APP_Scene_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *
     }
 }
 
+// 处理数据
 void APP_UappsMsgProcessing(uint8_t *inputDataBuff, uint16_t inputDataBuffLen)
 {
-    // APP_PRINTF_BUF("inputDataBuff", inputDataBuff, inputDataBuffLen);
     UappsMessage uappsMsg;
     RSL_t rsiMsg;
     uint8_t rsiStr[128];
@@ -708,19 +741,13 @@ void APP_UappsMsgProcessing(uint8_t *inputDataBuff, uint16_t inputDataBuffLen)
         optionValueLen = uappsMsg.options[0].opt_len;
         memcpy(rsiStr, uappsMsg.options[0].opt_val, optionValueLen * sizeof(uint8_t));
         rsiStr[optionValueLen] = '\0';
+
         RslFromStr(&rsiMsg, (char *)rsiStr);
 
         if (UAPPS_OK == isRSIDataFlag) {
             if (rsiMsg.se == 201) { // 群组数据
                 APP_Group_TOPIC_MSEProcessing(&uappsMsg, &rsiMsg, uappsMsg.pl_ptr, uappsMsg.pl_len);
                 return;
-#if 0
-                if (APP_isGroupExist(groupId, rsiMsg.aei) != 0) // 判断该群组号是否存在
-                {
-                    APP_PRINTF("groupId did not found!\n");
-                    return;
-                }
-#endif
             }
             if (rsiMsg.se == 202) { // 场景数据
                 APP_Scene_TOPIC_MSEProcessing(&uappsMsg, &rsiMsg, uappsMsg.pl_ptr, uappsMsg.pl_len);
@@ -734,55 +761,14 @@ void APP_UappsMsgProcessing(uint8_t *inputDataBuff, uint16_t inputDataBuffLen)
             return;
         }
     } else {
-        // 根据串口接收到的数据解析判断之后不为Uapps指令。如果mcu需要对该数据另外单独进行处理则放到此处进行解析
-        uint8_t *target = (uint8_t *)"/_factory";
-        size_t target_len = strlen("/_factory");
-        if (memcmp(inputDataBuff, target, target_len) == 0) { // 恢复出厂设置
-            APP_PRINTF("MCU_Device_Factory\n");
-            MCU_Device_Factory();
-        }
+        // // 根据串口接收到的数据解析判断之后不为Uapps指令。如果mcu需要对该数据另外单独进行处理则放到此处进行解析
+        // if (strstr((char *)inputDataBuff, "/_factory") != NULL) {
+        //     MCU_Device_Factory();
+        //     return;
+        // }
         return;
     }
 }
-
-// uint16_t Uapps_PackRSLWithFromMsg(uint8_t *sendBuff, char *rslStr, char *from, uint8_t *playload, uint8_t playloadLen)
-// {
-//     uint16_t sendBuffLen;
-
-//     UappsMessage txMsg;
-//     char RSLtemp[65];
-
-//     if (sendBuff == NULL || rslStr == NULL || strlen(rslStr) == 0) {
-//         return 0;
-//     }
-//     if (playloadLen > 0 && playload == NULL) {
-//         return 0;
-//     }
-
-//     strcpy(RSLtemp, rslStr);
-//     memset(&txMsg, 0, sizeof(UappsMessage));
-//     UappsCreateMessage(&txMsg, UAPPS_TYPE_NON, UAPPS_REQ_PUT, RSLtemp);
-
-//     if (from != NULL) {
-//         if (UAPPS_OK != UappsPutOption(&txMsg, UAPPS_OPT_FROM, (uint8_t *)from, strlen(from))) {
-//             return 0;
-//         }
-//     }
-//     if (playloadLen > 0) {
-//         if (UAPPS_OK != UappsPutData(&txMsg, playload, playloadLen, UAPPS_FMT_OCTETS, 0)) {
-//             return 0;
-//         }
-//     }
-
-//     memcpy(sendBuff, ESC_STRING, ESC_LEN);
-//     sendBuffLen = Uapps2Bytes(&txMsg, &sendBuff[ESC_LEN]) + ESC_LEN;
-//     if (sendBuffLen >= 450) {
-//         APP_PRINTF("send data too long!\n");
-//         return 0;
-//     }
-
-//     return sendBuffLen;
-// }
 
 //  是否包含广播地址
 static uint8_t RslFindBroadcastAddr(char *RSL)

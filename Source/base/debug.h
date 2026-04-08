@@ -16,11 +16,11 @@
 #define APP_PRINTF(...) printf(__VA_ARGS__)
 #define APP_PRINTF_BUF(name, buf, len)                           \
     do {                                                         \
-        APP_PRINTF("%s: ", (name));                              \
+        APP_PRINTF("%s:[ ", (name));                             \
         for (size_t _idx = 0; _idx < (len); _idx++) {            \
             APP_PRINTF("%02X ", ((const uint8_t *)(buf))[_idx]); \
         }                                                        \
-        APP_PRINTF("\n");                                        \
+        APP_PRINTF("]");                                         \
     } while (0)
 #define APP_ERROR(fmt, ...) \
     APP_PRINTF("[#%s#] \"" fmt "\" ERROR!\n", __func__, ##__VA_ARGS__)

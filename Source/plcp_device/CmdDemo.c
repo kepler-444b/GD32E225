@@ -18,6 +18,7 @@ uint16_t Uapps_PackRSLWithFromMsg(uint8_t *sendBuff, char *rslStr, char *from, u
 {
     uint16_t sendBuffLen;
     UappsMessage txMsg;
+    memset(&txMsg, 0, sizeof(txMsg));
     char RSLtemp[65];
 
     if (sendBuff == NULL || rslStr == NULL || strlen(rslStr) == 0) {
@@ -321,7 +322,8 @@ void CmdTest_MSE_Factory(void)
     testCoap.token[1] = MSE_SET_Factory;
 
     uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
-    MCU_Send_date(uartSendBuff, uartSendBuffLen);
+    APP_PRINTF_BUF("uartSendBuff", uartSendBuff, uartSendBuffLen);
+    app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
 }
 
 /*--------------------------------------------------------------
@@ -347,6 +349,27 @@ void CmdTest_MSE_SET_Transfer(void)
     testCoap.token[1] = MSE_SET_Transfer;
 
     UappsPutData(&testCoap, did, sizeof(did), UAPPS_FMT_OCTETS, 0); // 加入载荷
+
+    uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
+    MCU_Send_date(uartSendBuff, uartSendBuffLen);
+}
+
+void CmdTest_MSE_McuVer(void)
+{
+    UappsMessage testCoap;
+    char rsi[50] = "SE0./_mcuVer";
+    uint8_t uartSendBuff[100];
+    uint16_t uartSendBuffLen = 0;
+    uint8_t mcu_ver[8] = {0x00, 0x00, 0x00, 0x01, 0x20, 0x26, 0x04, 0x08};
+    printf("enter SET_DID\n");
+
+    UappsCreateMessage(&testCoap, UAPPS_TYPE_CON, UAPPS_REQ_PUT, rsi);
+
+    // 如果应用层要设置token ID的话
+    testCoap.token[0] = 0x52;
+    testCoap.token[1] = MSE_SET_McuVer;
+
+    UappsPutData(&testCoap, mcu_ver, sizeof(mcu_ver), UAPPS_FMT_OCTETS, 0); // 加入载荷
 
     uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
     MCU_Send_date(uartSendBuff, uartSendBuffLen);

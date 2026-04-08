@@ -125,8 +125,13 @@ uint8_t PlcSdkCallbackOnOff(char *aei, uint8_t OnOff)
         if (id >= KEY_NUMBER) {
             return 0;
         }
-        return attr_led_table_set(id, OnOff);
+        // return attr_led_table_set(id, OnOff);
+        return attr_key_state_table_set(id, OnOff);
     } else {
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+            attr_relay_table_set(i, OnOff);
+            switch_led_b_ctrl(i, OnOff, 0);
+        }
         return 0;
     }
 #elif defined PLCP_LIGHT_CT
@@ -134,4 +139,25 @@ uint8_t PlcSdkCallbackOnOff(char *aei, uint8_t OnOff)
 
     return 1;
 #endif
+}
+
+uint8_t PlcSdkCallbackAeiToIndex(char *aei)
+{
+    uint8_t index = 0xff;
+    if (strlen(aei) == 0) {
+        return 0;
+    }
+    if (NULL != strstr(aei, "ch_")) {
+        index = aei[3] - '0' - 1;
+        if (index > RELAY_NUMBER) {
+            return 0xff;
+        }
+    } else if (NULL != strstr(aei, "led_")) {
+        index = aei[4] - '0' - 1;
+        if (index > RELAY_NUMBER) {
+            return 0xff;
+        }
+        index += RELAY_NUMBER;
+    }
+    return index;
 }

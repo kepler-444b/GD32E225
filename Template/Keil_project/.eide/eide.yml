@@ -73,7 +73,6 @@ virtualFolder:
         - path: ../../Source/plcp_device/APP_PublicAttribute.h
         - path: ../../Source/plcp_device/APP_UserProcess.c
         - path: ../../Source/plcp_device/CmdDemo.c
-        - path: ../../Source/plcp_device/main.c
         - path: ../../Source/plcp_device/MseProcess.c
         - path: ../../Source/plcp_device/MseProcess.h
         - path: ../../Source/plcp_device/UappsProduct_Init.c
@@ -83,12 +82,8 @@ virtualFolder:
         - path: ../../Source/plcp_device/plcp_panel/plcp_panel_info.h
         - path: ../../Source/plcp_device/plcp_panel/attr_table.c
         - path: ../../Source/plcp_device/plcp_panel/attr_table.h
-        - path: ../../Source/plcp_device/plcp_panel/button_state.c
-        - path: ../../Source/plcp_device/plcp_panel/button_state.h
         - path: ../../Source/plcp_device/plcp_panel/panel_adapter.c
         - path: ../../Source/plcp_device/plcp_panel/panel_adapter.h
-        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_callbacks.c
-        - path: ../../Source/plcp_device/plcp_panel/plcp_panel_callbacks.h
         - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_adapter.c
         - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_adapter.h
         - path: ../../Source/plcp_device/plcp_linght_ct/light_ct_attr_table.c
@@ -155,13 +150,8 @@ virtualFolder:
         - path: ../../Source/plcp_device/plcp_user_api/PLCP_scene.h
         - path: ../../Source/plcp_device/plcp_user_api/PLCP_sdk_api.c
         - path: ../../Source/plcp_device/plcp_user_api/PLCP_sdk_api.h
-        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sequentialData.c
-        - path: ../../Source/plcp_device/plcp_user_api/PLCP_sequentialData.h
         - path: ../../Source/plcp_device/plcp_user_api/PLCP_special_scene.c
         - path: ../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h
-      folders: []
-    - name: ::CMSIS
-      files: []
       folders: []
     - name: RTT
       files:
@@ -170,15 +160,18 @@ virtualFolder:
         - path: ../../Source/rtt/SEGGER_RTT_Conf.h
         - path: ../../Source/rtt/SEGGER_RTT_printf.c
       folders: []
+    - name: ::CMSIS
+      files: []
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
-  uid: f192158ed89e8c1e296ac8c90ab1869d
+  uid: e25c90462ab53390429f3ac280ddb737
 targets:
   GD32E23x:
     cppPreprocessAttrs:
       defineList:
-        - GD32E230
+        - GD32E225
       incList:
         - ../../Firmware/CMSIS
         - ../../Utilities
@@ -190,6 +183,8 @@ targets:
         - RTE/_GD32E23x
       libList: []
     excludeList: []
+    settings:
+      debugger: cortex-debug
     toolchain: AC6
     toolchainConfigMap:
       AC6:
@@ -200,7 +195,7 @@ targets:
           version: 3
           afterBuildTasks: []
           asm-compiler:
-            $use: asm-auto
+            $use: asm
           beforeBuildTasks: []
           c/cpp-compiler:
             language-c: c99
@@ -295,12 +290,49 @@ targets:
                 startAddr: "0x0"
               tag: IROM
         useCustomScatterFile: false
+      GCC:
+        archExtensions: ""
+        cpuType: Cortex-M23
+        floatingPointHardware: none
+        options:
+          version: 5
+          afterBuildTasks: []
+          asm-compiler:
+            ASM_FLAGS: ""
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            CXX_FLAGS: ""
+            C_FLAGS: ""
+            language-c: c11
+            language-cpp: c++11
+            one-elf-section-per-data: true
+            one-elf-section-per-function: true
+            optimization: level-debug
+            warnings: all-warnings
+          global:
+            $float-abi-type: hard
+            misc-control: ""
+            not-use-syscalls: true
+            output-debug-info: enable
+            use-newlib-nano: true
+          linker:
+            $outputTaskExcludes:
+              - .bin
+            LD_FLAGS: ""
+            LIB_FLAGS: -lm
+            output-format: elf
+            remove-unused-input-sections: true
+        scatterFilePath: <YOUR_LINKER_SCRIPT>.lds
+        storageLayout:
+          RAM: []
+          ROM: []
+        useCustomScatterFile: true
     uploadConfigMap:
       JLink:
         baseAddr: ""
         bin: ""
         cpuInfo:
-          cpuName: GD32E235C8T6
+          cpuName: GD32E235CBT6
           vendor: GigaDevice
         otherCmds: ""
         proType: 1

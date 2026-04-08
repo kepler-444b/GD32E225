@@ -5,15 +5,17 @@
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/flash/flash.h"
 
+extern bool curtain_exe;
+
 #define FLASH_PANEL_DELAY_TABLE 0x0801E000UL // 120页
 #define FLASH_PANEL_NIGHT_SCENE 0x0801E400UL // 121页
-
-#define DELAY_SCENE_MAX         32
 
 typedef struct {
     uint8_t enable;
     uint16_t scene_id;
     uint16_t scene_timer;
+
+    uint8_t reserved;
 } DelayScene_t;
 
 typedef struct
@@ -41,11 +43,14 @@ void night_scene_close(void);
 void night_scene_off_send(void);
 
 uint8_t special_scene_set(uint8_t *data, uint8_t len);
+NightScene_t *special_night_scene_get(void);
+DelayScene_t *special_delay_scene_get(void);
+
 fmc_state_enum APP_ReadDelaySceneParameter(void);
 fmc_state_enum APP_SaveDelaySceneParameter(void);
 
 fmc_state_enum APP_ReadNightSceneParameter(void);
 fmc_state_enum APP_SaveNightSceneParameter(void);
-void APP_SpecialSceneinit(void);
+void APP_SpecialSceneClr(void);
 
 #endif

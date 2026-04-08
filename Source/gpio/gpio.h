@@ -30,8 +30,10 @@ typedef enum {
     PWM_PB1,
     PWM_PB6,
     PWM_PB7,
-    PWM_PA3,
-    PWM_PA8,
+    // PWM_PA3,
+    // PWM_PA8,
+    PWM_PA6,
+    PWM_PA7,
 } pwm_hw_pins;
 
 typedef struct {

@@ -6,11 +6,13 @@
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../../Source/plcp_device/MseProcess.h"
+#include "../../Source/plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/plcp_device/plcp_panel/plcp_panel_info.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_bind.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h"
 #include "../../Source/pwm/pwm_hw.h"
+#include "../../Source/timer/timer.h"
 #include "systick.h"
 
 static uint8_t groupIndex;                      // 默认群组数
@@ -19,7 +21,8 @@ static uint16_t DeviceGroup[MAX_GROUP_NUMBERS]; // 默认群组
 static sDevice_Scene DeviceScene[MAX_SCENE_NUMBERS]; // 默认场景数据结构
 static uint8_t sceneIndex;                           // 默认场景数
 
-static uint8_t ch_sceneIndex[CH_SCENE_NUM];   // 继电器场景列表索引
+static uint8_t ch_sceneIndex[CH_SCENE_NUM]; // 继电器场景列表索引
+
 static uint8_t led_sceneIndex[LED_SCENE_NUM]; // 指示灯场景列表索引
 static uint8_t ad_led_sceneIndex[AD_LED_SCENE_NUM];
 
@@ -141,17 +144,17 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
     if (ret != FMC_READY)
         return ret;
 
-    for (uint8_t i = 0; i < 4; i++) {                     // 遍历结构体数量
+    for (uint8_t i = 0; i < KEY_NUMBER; i++) {            // 遍历结构体数量
         for (uint8_t j = 0; j < MAX_SCENE_NUMBERS; j++) { // 遍历场景数量
             if (my_led_scene[i].scenes[j].scene_id == 0 || my_led_scene[i].scenes[j].scene_id == 0xFFFF) {
                 led_sceneIndex[i] = j;
                 APP_PRINTF("led_sceneIndex[%d] = %d\n", i, j);
                 break;
             }
-#if 0
-            APP_PRINTF("my_led_scene[%d].scenes[%d].scene_id[%04X] \n", i, j, my_led_scene[i].scenes[j].scene_id);
-            APP_PRINTF_BUF(".open_scene ", my_led_scene[i].scenes[j].open_scene, 2);
-            APP_PRINTF_BUF(".close_scene", my_led_scene[i].scenes[j].close_scene, 2);
+#if 1
+            APP_PRINTF("my_led_scene[%d].scenes[%d].scene_id[%04X] open[%02X %02X] close[%02X %02X]\n", i, j, my_led_scene[i].scenes[j].scene_id,
+                       my_led_scene[i].scenes[j].open_scene[0], my_led_scene[i].scenes[j].open_scene[1],
+                       my_led_scene[i].scenes[j].close_scene[0], my_led_scene[i].scenes[j].close_scene[1]);
 #endif
         }
     }
@@ -234,14 +237,13 @@ static fmc_state_enum APP_ReadSceneParameter(void)
             APP_PRINTF("sceneIndex = %d\n", sceneIndex);
             break;
         }
-#if 0
-        APP_PRINTF("DeviceScene[%d].sceneId[%04X]\n", i, DeviceScene[i].sceneId);
-        APP_PRINTF_BUF(".scenePower    ", DeviceScene[i].scenePower, DeviceScene[i].scenePower[0] + 1);
-        APP_PRINTF_BUF(".quitscenePower", DeviceScene[i].quitscenePower, DeviceScene[i].quitscenePower[0] + 1);
+#if 1
+        APP_PRINTF("DeviceScene[%d].sceneId[%04X] ", i, DeviceScene[i].sceneId);
+        APP_PRINTF_BUF(".open", DeviceScene[i].scenePower, DeviceScene[i].scenePower[0] + 1);
+        APP_PRINTF_BUF(".close", DeviceScene[i].quitscenePower, DeviceScene[i].quitscenePower[0] + 1);
+        APP_PRINTF("\n");
 #endif
     }
-    APP_PRINTF("\n");
-
     return ret;
 }
 
@@ -249,9 +251,9 @@ bool APP_ReadAllSceneInfo(void)
 {
     fmc_state_enum ret = FMC_READY;
 #if defined PLCP_PANEL
-    if (APP_ReadChSceneParameter() != FMC_READY) {
-        ret++;
-    }
+    // if (APP_ReadChSceneParameter() != FMC_READY) {
+    //     ret++;
+    // }
     if (APP_ReadLedSceneParameter() != FMC_READY) {
         ret++;
     }
@@ -374,10 +376,10 @@ uint8_t APP_SetScene(single_scene_data *temp)
     }
 
     // 打印日志
-    APP_PRINTF("%s[%d].scenes[%d].scene_id:%04X\n", log_prefix, temp->kj_index, temp->index, temp->scene_id);
-    APP_PRINTF_BUF(".open_scene", open_dst, temp->open_scene_len);
-    if (close_dst)
-        APP_PRINTF_BUF(".close_scene", close_dst, temp->close_scene_len);
+    // APP_PRINTF("%s[%d].scenes[%d].scene_id:%04X\n", log_prefix, temp->kj_index, temp->index, temp->scene_id);
+    // APP_PRINTF_BUF(".open_scene", open_dst, temp->open_scene_len);
+    // if (close_dst)
+    //     APP_PRINTF_BUF(".close_scene", close_dst, temp->close_scene_len);
 
     // 保存参数
     switch (temp->scene_type) {
@@ -400,148 +402,10 @@ uint8_t APP_SetScene(single_scene_data *temp)
 // 添加场景
 uint8_t APP_Scene_Join(uint8_t *buf, uint16_t len, const char *aei)
 {
-#if 0
-    uint16_t sceneId;
-    memcpy((uint8_t *)&sceneId, buf, 2);
-    if (sceneId == 0 || sceneId == 0xFFFF || len < 3)
+    APP_PRINTF_BUF("buf", buf, len);
+    if (len < 3) {
         return Device_Err_Len;
-
-    uint8_t scene_len = len - 2;           // 剥离场景号(前2个字节)
-    uint8_t *scene_data = &buf[2];         // 指向剥离后的数据(open scene)
-    uint8_t open_data_len = scene_data[0]; // open scene 数据长度
-
-    if ((open_data_len + 1) > scene_len)
-        return Device_Err_Len;
-
-    static single_scene_data temp;
-    memset(&temp, 0, sizeof(single_scene_data));
-
-    bool only_open = ((open_data_len + 1) == scene_len);
-
-    if (only_open) { // 只有开场景
-        APP_PRINTF("only_open\n");
-        uint8_t i = 0;
-        temp.scene_id = sceneId;
-        temp.open_scene = scene_data;
-        temp.close_scene = NULL;
-        temp.open_scene_len = open_data_len + 1;
-
-        if (strncmp(aei, "ch_", 3) == 0) {
-            uint8_t kj_index = (aei[3] - '0') - 1;
-            for (i = 0; i < ch_sceneIndex[kj_index]; i++) { // 判断场景是否存在
-                if (my_ch_scene[kj_index].scenes[i].scene_id == sceneId)
-                    break;
-            }
-            if (i == ch_sceneIndex[kj_index]) { // 如果是新场景
-                if (ch_sceneIndex[kj_index] >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                ch_sceneIndex[kj_index]++;
-            }
-            temp.index = i;
-            temp.scene_type = CH_SCENE;
-            temp.kj_index = kj_index;
-            return APP_SetScene(&temp);
-
-        } else if (strncmp(aei, "led_", 4) == 0) {
-            uint8_t kj_index = (aei[4] - '0') - 1;
-
-            for (i = 0; i < led_sceneIndex[kj_index]; i++) { // 判断场景是否存在
-                if (my_led_scene[kj_index].scenes[i].scene_id == sceneId)
-                    break;
-            }
-            if (i == led_sceneIndex[kj_index]) { // 如果是新场景
-                if (led_sceneIndex[kj_index] >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                led_sceneIndex[kj_index]++;
-            }
-
-            temp.index = i;
-            temp.scene_type = LED_SCENE;
-            temp.kj_index = kj_index;
-            return APP_SetScene(&temp);
-
-        } else if (aei[0] == '\0') {
-            for (i = 0; i < sceneIndex; i++) {
-                if (DeviceScene[i].sceneId == sceneId)
-                    break;
-            }
-            if (i == sceneIndex) { // 如果是新场景
-                if (sceneIndex >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                sceneIndex++;
-            }
-            temp.index = i;
-            temp.scene_type = SCENE;
-            return APP_SetScene(&temp);
-        }
-
-    } else {
-        uint8_t *close_data = &scene_data[open_data_len + 1];
-        uint8_t close_data_len = close_data[0];
-        if ((open_data_len + 1 + close_data_len + 1) > scene_len)
-            return Device_Err_Len;
-
-        APP_PRINTF("open and close\n");
-        uint8_t i = 0;
-        temp.scene_id = sceneId;
-        temp.open_scene = scene_data;
-        temp.open_scene_len = open_data_len + 1;
-        temp.close_scene = close_data;
-        temp.close_scene_len = close_data_len + 1;
-
-        if (strncmp(aei, "ch_", 3) == 0) {
-            uint8_t kj_index = (aei[3] - '0') - 1;
-            for (i = 0; i < ch_sceneIndex[kj_index]; i++) { // 判断场景是否存在
-                if (my_ch_scene[kj_index].scenes[i].scene_id == sceneId)
-                    break;
-            }
-            if (i == ch_sceneIndex[kj_index]) { // 如果是新场景
-                if (ch_sceneIndex[kj_index] >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                ch_sceneIndex[kj_index]++;
-            }
-            temp.index = i;
-            temp.scene_type = CH_SCENE;
-            temp.kj_index = kj_index;
-            return APP_SetScene(&temp);
-
-        } else if (strncmp(aei, "led_", 4) == 0) {
-            uint8_t kj_index = (aei[4] - '0') - 1;
-
-            for (i = 0; i < led_sceneIndex[kj_index]; i++) { // 判断场景是否存在
-                if (my_led_scene[kj_index].scenes[i].scene_id == sceneId)
-                    break;
-            }
-            if (i == led_sceneIndex[kj_index]) { // 如果是新场景
-                if (led_sceneIndex[kj_index] >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                led_sceneIndex[kj_index]++;
-            }
-
-            temp.index = i;
-            temp.scene_type = LED_SCENE;
-            temp.kj_index = kj_index;
-            return APP_SetScene(&temp);
-
-        } else if (aei[0] == '\0') {
-            for (i = 0; i < sceneIndex; i++) {
-                if (DeviceScene[i].sceneId == sceneId)
-                    break;
-            }
-            if (i == sceneIndex) { // 如果是新场景
-                if (sceneIndex >= MAX_SCENE_NUMBERS)
-                    return Device_Err_Full;
-                sceneIndex++;
-            }
-            temp.index = i;
-            temp.scene_type = SCENE;
-            return APP_SetScene(&temp);
-        }
     }
-    return Device_Err_Full;
-#endif
-    if (len < 3)
-        return Device_Err_Len;
 
     uint16_t sceneId = buf[0] | (buf[1] << 8);
     if (sceneId == 0 || sceneId == 0xFFFF)
@@ -641,9 +505,7 @@ uint8_t APP_Scene_Quit(uint8_t *buf, uint16_t len, const char *aei)
 #if defined PLCP_PANEL
     if (strncmp(aei, "ch_", 3) == 0) {
         uint8_t kj_index = (aei[3] - '0') - 1;
-
         uint8_t i = 0;
-
         for (i = 0; i < ch_sceneIndex[kj_index]; i++) {
             if (my_ch_scene[kj_index].scenes[i].scene_id == sceneId)
                 break;
@@ -673,22 +535,60 @@ uint8_t APP_Scene_Quit(uint8_t *buf, uint16_t len, const char *aei)
         APP_SaveLedSceneParameter();
         return Device_OK;
     }
-#elif defined PLCP_LIGHT_CT
-    uint8_t i = 0;
-    for (i = 0; i < sceneIndex; i++) {
-        if (DeviceScene[i].sceneId == sceneId) {
-            break;
-        }
-    }
-    if (i == sceneIndex) {
-        return Device_Err_Full;
-    }
-    sceneIndex--;
-    memcpy(&DeviceScene[i], &DeviceScene[i + 1], (sceneIndex - i) * sizeof(sDevice_Scene));
-    memset(&DeviceScene[sceneIndex], 0, sizeof(sDevice_Scene));
-    APP_SaveSceneParameter();
-    return Device_OK;
 #endif
+    if (aei[0] == '\0') { // 默认场景列表
+        uint8_t i = 0;
+        for (i = 0; i < sceneIndex; i++) {
+            if (DeviceScene[i].sceneId == sceneId) {
+                break;
+            }
+        }
+        if (i == sceneIndex) {
+            return Device_Err_Full; // 没有找到,直接返回
+        }
+        sceneIndex--;
+        memcpy(&DeviceScene[i], &DeviceScene[i + 1], (sceneIndex - i) * sizeof(sDevice_Scene)); // 其余的整体上移
+        memset(&DeviceScene[sceneIndex], 0, sizeof(sDevice_Scene));
+        APP_SaveSceneParameter();
+        return Device_OK;
+    }
+
+    return Device_OK;
+}
+
+uint8_t APP_Scene_Dele(uint8_t *buf, uint16_t len, const char *aei)
+{
+    APP_PRINTF("APP_Scene_Dele\n");
+    uint16_t sceneId;
+    memcpy((uint8_t *)&sceneId, buf, 2);
+    if (sceneId == 0 || sceneId == 0xffff) {
+        return Device_Err_Len;
+    }
+#if defined PLCP_PANEL
+    if (strncmp(aei, "ch_", 3) == 0) {
+        uint8_t kj_index = (aei[3] - '0') - 1;
+
+        memset(&my_ch_scene[kj_index], 0, sizeof(my_ch_scene[kj_index]));
+        ch_sceneIndex[kj_index] = 0;
+        APP_SaveChSceneParameter();
+        return Device_OK;
+    }
+    if (strncmp(aei, "led_", 4) == 0) {
+        uint8_t kj_index = (aei[4] - '0') - 1;
+
+        memset(&my_led_scene[kj_index], 0, sizeof(my_led_scene[kj_index]));
+        led_sceneIndex[kj_index] = 0;
+        APP_SaveLedSceneParameter();
+        return Device_OK;
+    }
+#endif
+    if (aei[0] == '\0') { // 默认场景列表
+        memset(&DeviceScene, 0, sizeof(DeviceScene));
+        sceneIndex = 0;
+        APP_SaveSceneParameter();
+        return Device_OK;
+    }
+
     return Device_OK;
 }
 
@@ -713,7 +613,7 @@ uint16_t APP_Scene_List(uint8_t *buf, const char *aei)
             buf[index++] = (uint8_t)(my_led_scene[kj_index].scenes[i].scene_id >> 8);
         }
         return index;
-    } else if (aei[0] == '\0') {
+    } else if (aei[0] == '\0') { // 整体的场景信息
         buf[index++] = sceneIndex;
         for (uint8_t i = 0; i < sceneIndex; i++) {
             buf[index++] = (uint8_t)(DeviceScene[i].sceneId & 0xff);
@@ -726,134 +626,158 @@ uint16_t APP_Scene_List(uint8_t *buf, const char *aei)
 
 uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei)
 {
-#if 0
-    for (uint8_t i = 0; i < sceneIndex; i++) {
-    }
-    for (uint8_t i = 0; i < CH_SCENE_NUM; i++) {
-        for (uint8_t j = 0; j < ch_sceneIndex[i]; j++) {
-        }
-    }
-    for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
-        for (uint8_t j = 0; j < led_sceneIndex[i]; j++) {
-        }
-    }
-#endif
-    uint16_t index = 1; // buf[0] 用来存总场景数
+    APP_PRINTF("APP_Scene_Copy_Get\n");
+
+    uint16_t index = 1;
     uint8_t scene_count = 0;
 
-    // -------------------------
-    // 1. 默认场景列表 DeviceScene
-    // -------------------------
-    for (uint8_t i = 0; i < sceneIndex; i++) {
-        uint16_t sceneId = DeviceScene[i].sceneId;
+    for (uint8_t j = 0; j < MAX_SCENE_NUMBERS; j++) {
+        uint16_t sceneId = 0;
+        uint8_t ae_count = 0;
 
-        // 场景号（高字节在前）
-        buf[index++] = (sceneId >> 8) & 0xFF;
+        // 先统计AE数量
+        for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+            if (j < led_sceneIndex[i]) {
+                sceneId = my_led_scene[i].scenes[j].scene_id;
+                if (sceneId != 0)
+                    ae_count++;
+            }
+        }
+
+        if (ae_count == 0)
+            continue;
+
+        // 写scene_id
+        buf[index++] = sceneId >> 8;
         buf[index++] = sceneId & 0xFF;
 
-        // AEI为空
-        buf[index++] = 0x00;
-        buf[index++] = 0x00;
-        buf[index++] = 0x00;
-        buf[index++] = 0x00;
-        buf[index++] = 0x00;
+        // 写AE数量
+        buf[index++] = ae_count;
 
-        // 状态类型（1 = 只有打开场景）
-        buf[index++] = 0x01;
+        // 写AE数据
+        for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+            if (j >= led_sceneIndex[i]) {
+                continue;
+            }
 
-        // 数据长度
-        buf[index++] = 0x01;
+            single_led_scene *sc = &my_led_scene[i].scenes[j];
 
-        // 数据内容（这里先用0示例，可以改为 DeviceScene[i].scenePower[0]）
-        buf[index++] = 0x00;
+            if (sc->scene_id != sceneId) {
+                continue;
+            }
 
-        scene_count++;
-    }
-
-    // -------------------------
-    // 2. 继电器场景列表 my_ch_scene
-    // -------------------------
-    for (uint8_t i = 0; i < CH_SCENE_NUM; i++) {
-        for (uint8_t j = 0; j < ch_sceneIndex[i]; j++) {
-            uint16_t sceneId = my_ch_scene[i].scenes[j].scene_id;
-
-            // 场景号
-            buf[index++] = (sceneId >> 8) & 0xFF;
-            buf[index++] = sceneId & 0xFF;
-
-            // AEI = ch_1, ch_2 ...
-            buf[index++] = 'c';
-            buf[index++] = 'h';
-            buf[index++] = '_';
-            buf[index++] = '0' + (i + 1);
-            buf[index++] = 0x00;
-
-            // 状态类型（1 = 只有打开场景）
-            buf[index++] = 0x01;
-
-            // 数据长度
-            buf[index++] = 0x01;
-
-            // 数据内容（示例用 open_scene[0]）
-            buf[index++] = my_ch_scene[i].scenes[j].open_scene[0];
-
-            scene_count++;
-        }
-    }
-
-    // -------------------------
-    // 3. LED场景列表 my_led_scene
-    // -------------------------
-    for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
-        for (uint8_t j = 0; j < led_sceneIndex[i]; j++) {
-            uint16_t sceneId = my_led_scene[i].scenes[j].scene_id;
-
-            // 场景号
-            buf[index++] = (sceneId >> 8) & 0xFF;
-            buf[index++] = sceneId & 0xFF;
-
-            // AEI = led_1, led_2 ...
             buf[index++] = 'l';
             buf[index++] = 'e';
             buf[index++] = 'd';
             buf[index++] = '_';
-            buf[index++] = '0' + (i + 1);
+            buf[index++] = '1' + i;
+            buf[index++] = 0x00;
 
-            // 状态类型
-            buf[index++] = 0x01;
+            uint8_t scene_type;
 
-            // 数据长度
-            buf[index++] = 0x01;
+            if ((sc->close_scene[0] != 0xFF) && (sc->close_scene[1] != 0xFF)) {
+                scene_type = 0x03;
+            } else {
+                scene_type = 0x01;
+            }
 
-            // 数据内容（示例用 open_scene[0]）
-            buf[index++] = my_led_scene[i].scenes[j].open_scene[0];
+            buf[index++] = scene_type;
 
-            scene_count++;
+            // 开场景
+            buf[index++] = sc->open_scene[0];
+            buf[index++] = sc->open_scene[1];
+
+            // 如果有关场景
+            if (scene_type == 0x03) {
+                buf[index++] = sc->close_scene[0];
+                buf[index++] = sc->close_scene[1];
+            }
         }
+
+        scene_count++;
     }
 
-    buf[0] = scene_count; // 写入总场景数
-    return index;         // 返回总填充长度
+    buf[0] = scene_count;
+
+    return index;
 }
 
+uint16_t APP_Scene_Copy_Put(uint8_t *buf, uint16_t len)
+{
+    APP_PRINTF("APP_Scene_Copy_Put\n");
+    uint16_t index = 0;
+
+    // 剥开 "场景总数"
+    uint8_t total_scenes = buf[index++];
+
+    for (int i = 0; i < total_scenes; i++) {
+        // 剥开 "场景号" (2个字节)
+        uint8_t scene_id_h = buf[index++]; // 假设第一个字节是高位 00
+        uint8_t scene_id_l = buf[index++]; // 假设第二个字节是低位 01
+
+        // 剥开 "AE数量"
+        uint8_t ae_count = buf[index++];
+
+        // 循环处理每一个 AE (比如 led_1, led_2)
+        for (int j = 0; j < ae_count; j++) {
+            // 记录名字起始位置
+            const char *aei_name = (const char *)&buf[index];
+
+            // 移动 index 跳过名字字符串 (直到遇到 00)
+            while (buf[index] != 0x00) {
+                index++;
+            }
+            index++; // 跳过名字末尾的 00
+
+            uint8_t status = buf[index++]; // 读取状态位 (这里决定了后面参数的长度)
+
+            // 准备给 APP_Scene_Join 的数据包
+            uint8_t join_data[6];
+            join_data[0] = scene_id_h;
+            join_data[1] = scene_id_l;
+
+            uint16_t current_join_len = 2; // 初始长度为场景号的2字节
+
+            if (status == 0x01) {
+                // 只有"开"场景:读 2 个字节参数
+                join_data[2] = buf[index++];
+                join_data[3] = buf[index++];
+                current_join_len += 2; // 总长度 = 4
+            } else if (status == 0x03) {
+                // 进出场景:读 4 个字节参数
+                join_data[2] = buf[index++];
+                join_data[3] = buf[index++];
+                join_data[4] = buf[index++];
+                join_data[5] = buf[index++];
+                current_join_len += 4; // 总长度 = 6
+            }
+            // 调用函数,传入实际的长度变量 current_join_len
+            APP_PRINTF("aei_name:%s\n", aei_name);
+            APP_Scene_Join(join_data, current_join_len, aei_name);
+        }
+    }
+    return 0;
+}
+
+// 启动场景
 void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
 {
-    // APP_PRINTF("APP_Device_SceneStart\n");
     uint8_t payloadFlag = 0;
     uint16_t sceneId = 0;
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uapps_rw_buffer_t scratch;
     memset(&scratch, 0, sizeof(scratch));
-
     APP_StrToHex((uint8_t *)aei, strlen(aei), (uint8_t *)&sceneId);
     const sPublic_attribute *pAttributeOfAPP = APP_Attribute_GetPointer();
-    if (pAttributeOfAPP->did == 0) {
+
+    if (pAttributeOfAPP->did == 0) { // 如果没有入网
         if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {
             respondCode = UAPPS_NOT_FOUND;
             APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
         }
         return;
     }
+
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
         if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
             if (sceneId == night_scene_info_get()->open_night) {
@@ -862,22 +786,9 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
             respondCode = UAPPS_ACK_CHANGED;
         }
 
-        for (uint8_t j = 0; j < CH_SCENE_NUM; j++) {
-#if defined DND_MODE_PANEL // 对于清理勿扰,插卡后需要恢复原来的状态
-            if (sceneId == 0x9999) {
-                MCU_dnd_recover();
-                respondCode = UAPPS_ACK_CHANGED;
-                break;
-            }
-            if (sceneId == 0x6666) {
-                for (uint8_t j = 0; j < KEY_NUMBER; j++) {
-                    APP_SET_GPIO(get_panel_pins()->led_y_pin[j], false);
-                    app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[j], 0, 100);
-                }
-                respondCode = UAPPS_ACK_CHANGED;
-                break;
-            }
-#endif
+        for (uint8_t j = 0; j < LED_SCENE_NUM; j++) {
+#if 0
+            // 遍历继电器列表
             uint8_t ch_cnt = ch_sceneIndex[j];
             for (uint8_t i = 0; i < ch_cnt; i++) {
                 if (my_ch_scene[j].scenes[i].scene_id == sceneId) {
@@ -886,6 +797,8 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
                     break;
                 }
             }
+#endif
+            // 遍历 LED 列表
             uint8_t led_cnt = led_sceneIndex[j];
             for (uint8_t i = 0; i < led_cnt; i++) {
                 if (my_led_scene[j].scenes[i].scene_id == sceneId) {
@@ -895,25 +808,10 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
                 }
             }
         }
+
         // 默认场景处理
         for (uint8_t i_scene = 0; i_scene < sceneIndex; i_scene++) {
-#if defined DND_MODE_PANEL // 对于清理勿扰,插卡后需要恢复原来的状态
-            if (sceneId == 0x9999) {
-                MCU_dnd_recover();
-                respondCode = UAPPS_ACK_CHANGED;
-                break;
-            }
-            if (sceneId == 0x6666) {
-                for (uint8_t j = 0; j < KEY_NUMBER; j++) {
-                    APP_SET_GPIO(get_panel_pins()->led_y_pin[j], false);
-                    app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[j], 0, 100);
-                }
-                respondCode = UAPPS_ACK_CHANGED;
-                break;
-            }
-#endif
             if (DeviceScene[i_scene].sceneId == sceneId) {
-
                 MCU_Scene_exe(DeviceScene[i_scene].scenePower, DeviceScene[i_scene].scenePower[0]);
                 respondCode = UAPPS_ACK_CHANGED;
                 break;
@@ -925,6 +823,7 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
     }
 }
 
+// 关闭场景
 void APP_Device_SceneClose(UappsMessage *uappsMsg, const char *aei)
 {
     // printf("APP_Device_SceneClose\r\n");
@@ -946,7 +845,7 @@ void APP_Device_SceneClose(UappsMessage *uappsMsg, const char *aei)
         return;
     }
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
-        for (uint8_t j = 0; j < CH_SCENE_NUM; j++) {
+        for (uint8_t j = 0; j < LED_SCENE_NUM; j++) {
             uint8_t ch_cnt = ch_sceneIndex[j];
             for (uint8_t i = 0; i < ch_cnt; i++) {
                 if (my_ch_scene[j].scenes[i].scene_id == sceneId) {
@@ -1104,9 +1003,9 @@ uint8_t APP_isGroupExist(uint16_t groupNum, const char *aei)
     return Device_Err_NoFound;
 }
 
-void APP_Device_GroupState(UappsMessage *uappsMsg, const char *aei)
+void APP_Device_GroupOn(UappsMessage *uappsMsg, const char *aei)
 {
-    APP_PRINTF("APP_Device_GroupState\n");
+    APP_PRINTF("APP_Device_GroupOn\n");
     uint8_t i = 0;
     uint8_t payloadFlag = 0;
     uint16_t groupId = 0;
@@ -1148,9 +1047,9 @@ void APP_Device_GroupState(UappsMessage *uappsMsg, const char *aei)
     }
 }
 
-void APP_Device_GroupClose(UappsMessage *uappsMsg, const char *aei)
+void APP_Device_GroupOff(UappsMessage *uappsMsg, const char *aei)
 {
-    printf("APP_Device_GroupClose\r\n");
+    printf("APP_Device_GroupOff\r\n");
     uint8_t i = 0;
     uint8_t payloadFlag = 0;
     uint16_t groupId = 0;
@@ -1200,4 +1099,113 @@ void APP_Device_GroupClose(UappsMessage *uappsMsg, const char *aei)
         APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
     }
 }
+
+// ***************************** 用于窗帘按键逻辑 *****************************
+
+static aei_t aei_list[KEY_NUMBER];
+static curtain_t my_curtain[KEY_NUMBER];
+
+void APP_Device_GroupOpen(UappsMessage *uappsMsg, RSL_t *rsl) // 执行窗帘开
+{
+    uint8_t open_num = PLCP_BindTableRead_aei(rsl->aei, "_open", aei_list, KEY_NUMBER); // 查找该场景号的"窗帘开"按键
+    for (uint8_t i = 0; i < open_num; i++) {
+        if (aei_list[i][0] == 'k' && aei_list[i][1] >= '1' && aei_list[i][1] <= '6') {
+            uint8_t index = aei_list[i][1] - '1';
+            if (attr_kj_mode_table_get(index) == CURTAIN_e) {
+                my_curtain[index].is_exe = true;
+                // APP_PRINTF("_open %d\n", index);
+            }
+        }
+    }
+
+    uint8_t close_num = PLCP_BindTableRead_aei(rsl->aei, "_close", aei_list, KEY_NUMBER); // 查找该场景号的"窗帘关"按键
+    for (uint8_t i = 0; i < close_num; i++) {
+        if (aei_list[i][0] == 'k' && aei_list[i][1] >= '1' && aei_list[i][1] <= '6') {
+            uint8_t index = aei_list[i][1] - '1';
+            if (attr_kj_mode_table_get(index) == CURTAIN_e) {
+                if (my_curtain[index].is_exe == true) {
+                    my_curtain[index].is_exe = false;
+                }
+            }
+        }
+    }
+}
+
+void APP_Device_GroupClose(UappsMessage *uappsMsg, RSL_t *rsl) // 执行窗帘关
+{
+    uint8_t close_num = PLCP_BindTableRead_aei(rsl->aei, "_close", aei_list, KEY_NUMBER); // 查找该场景号的"窗帘开"按键
+    for (uint8_t i = 0; i < close_num; i++) {
+        if (aei_list[i][0] == 'k' && aei_list[i][1] >= '1' && aei_list[i][1] <= '6') {
+            uint8_t index = aei_list[i][1] - '1';
+            if (attr_kj_mode_table_get(index) == CURTAIN_e) {
+                my_curtain[index].is_exe = true;
+                my_curtain[index].count = 0;
+            }
+        }
+    }
+
+    uint8_t open_num = PLCP_BindTableRead_aei(rsl->aei, "_open", aei_list, KEY_NUMBER); // 查找该场景号的"窗帘关"按键
+    for (uint8_t i = 0; i < open_num; i++) {
+        if (aei_list[i][0] == 'k' && aei_list[i][1] >= '1' && aei_list[i][1] <= '6') {
+            uint8_t index = aei_list[i][1] - '1';
+            if (attr_kj_mode_table_get(index) == CURTAIN_e) {
+                if (my_curtain[index].is_exe == true) {
+                    my_curtain[index].is_exe = false;
+                    my_curtain[index].count = 0;
+                }
+            }
+        }
+    }
+}
+
+void APP_Device_GroupStop(UappsMessage *uappsMsg, RSL_t *rsl)
+{
+    uint8_t stop_num = PLCP_BindTableRead_aei(rsl->aei, rsl->rsi, aei_list, KEY_NUMBER);
+    for (uint8_t i = 0; i < stop_num; i++) {
+        if (aei_list[i][0] == 'k' && aei_list[i][1] >= '1' && aei_list[i][1] <= '6') {
+            uint8_t index = aei_list[i][1] - '1';
+            if (attr_kj_mode_table_get(index) == CURTAIN_e) {
+                if (my_curtain[index].is_exe == true) {
+                    my_curtain[index].is_exe = false;
+                    my_curtain[index].count = 0;
+                }
+            }
+        }
+    }
+}
+
+void timer_curtain_exe(void *arg)
+{
+    for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+        if (my_curtain[i].is_exe) { // 窗帘开或窗帘关
+            my_curtain[i].count++;
+            APP_SET_GPIO(get_panel_pins()->led_y_pin[i], true);
+            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 0);
+        }
+        if (my_curtain[i].is_exe == false) {
+            APP_SET_GPIO(get_panel_pins()->led_y_pin[i], false);
+            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 1000);
+        }
+        if (my_curtain[i].count >= 50) {
+            my_curtain[i].is_exe = false;
+            my_curtain[i].count = 0;
+            APP_SET_GPIO(get_panel_pins()->led_y_pin[i], false);
+            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 1000);
+        }
+    }
+}
+
+const curtain_t *APP_GetCurtain(uint8_t index)
+{
+    if (index >= KEY_NUMBER) {
+        return NULL;
+    }
+    return &my_curtain[index];
+}
+
+void APP_Curtain_timer(void)
+{
+    app_timer_start(100, timer_curtain_exe, true, NULL, "curtain_hold");
+}
+
 #endif

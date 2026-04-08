@@ -57,8 +57,11 @@ void pwm_hw_set_duty(pwm_hw_pins pin, uint16_t duty)
     case PWM_PB7:
         timer_channel_output_pulse_value_config(TIMER16, TIMER_CH_0, duty);
         break;
-    case PWM_PA8:
-        timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, duty);
+    case PWM_PA6:
+        timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_0, duty);
+        break;
+    case PWM_PA7:
+        timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_1, duty);
         break;
     default:
         break;
@@ -98,10 +101,11 @@ void app_set_pwm_hw_fade(pwm_hw_pins pin, uint16_t target_idx, uint16_t duration
     case PWM_PB7:
         current_idx = TIMER_CH0CV(TIMER16) * (FADE_TABLE_SIZE - 1) / timer16_period;
         break;
-    case PWM_PA3:
+    case PWM_PA6:
+        current_idx = TIMER_CH0CV(TIMER2) * (FADE_TABLE_SIZE - 1) / timer2_period;
         break;
-    case PWM_PA8:
-        current_idx = TIMER_CH0CV(TIMER0) * (FADE_TABLE_SIZE - 1) / timer0_period;
+    case PWM_PA7:
+        current_idx = TIMER_CH1CV(TIMER2) * (FADE_TABLE_SIZE - 1) / timer2_period;
         break;
     }
     ch->pin = pin;
@@ -144,8 +148,11 @@ void pwm_hw_fade_update(void *arg)
         case PWM_PB7:
             period = timer16_period;
             break;
-        case PWM_PA8:
-            period = timer0_period;
+        case PWM_PA6:
+            period = timer2_period;
+            break;
+        case PWM_PA7:
+            period = timer2_period;
             break;
         default:
             return;
@@ -169,7 +176,9 @@ bool app_pwm_hw_add_pin(pwm_hw_pins hw_pin)
     timer_oc_parameter_struct timer_ocinitpara;
     switch (hw_pin) {
     case PWM_PB0:
-    case PWM_PB1: {
+    case PWM_PB1:
+    case PWM_PA6:
+    case PWM_PA7: {
         if (!timer2_inited) {
             rcu_periph_clock_enable(RCU_TIMER2);
             timer_deinit(TIMER2);
@@ -188,8 +197,16 @@ bool app_pwm_hw_add_pin(pwm_hw_pins hw_pin)
             timer2_period = timer_initpara.period;
             timer2_inited = true;
         }
-        // uint16_t channel = hw_pin = PWM_PB0 ? TIMER_CH_2 : TIMER_CH_3;
-        uint16_t channel = (hw_pin == PWM_PB0) ? TIMER_CH_2 : TIMER_CH_3;
+
+        uint16_t channel;
+        if (hw_pin == PWM_PB0)
+            channel = TIMER_CH_2;
+        else if (hw_pin == PWM_PB1)
+            channel = TIMER_CH_3;
+        else if (hw_pin == PWM_PA6)
+            channel = TIMER_CH_0; // PA6
+        else if (hw_pin == PWM_PA7)
+            channel = TIMER_CH_1;
 
         timer_channel_output_struct_para_init(&timer_ocinitpara);
         timer_ocinitpara.outputstate = TIMER_CCX_ENABLE;
@@ -272,41 +289,7 @@ bool app_pwm_hw_add_pin(pwm_hw_pins hw_pin)
         timer_channel_output_shadow_config(TIMER16, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
         timer_channel_output_pulse_value_config(TIMER16, TIMER_CH_0, 0);
     } break;
-    case PWM_PA8: {
-        if (!timer0_inited) {
-            rcu_periph_clock_enable(RCU_TIMER0);
-            timer_deinit(TIMER0);
 
-            timer_struct_para_init(&timer_initpara);
-            timer_initpara.prescaler = SYSTEM_CLOCK / (PWM_FREQ_HZ * 1000) - 1; // 分频
-            timer_initpara.alignedmode = TIMER_COUNTER_EDGE;
-            timer_initpara.counterdirection = TIMER_COUNTER_UP;
-            timer_initpara.period = 999; // 分辨率1000
-            timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
-            timer_initpara.repetitioncounter = 0;
-            timer_init(TIMER0, &timer_initpara);
-
-            timer_primary_output_config(TIMER0, ENABLE); // 高端/主输出使能
-            timer_auto_reload_shadow_enable(TIMER0);
-            timer_enable(TIMER0);
-
-            timer0_period = timer_initpara.period;
-            timer0_inited = true;
-        }
-
-        timer_channel_output_struct_para_init(&timer_ocinitpara);
-        timer_ocinitpara.outputstate = TIMER_CCX_ENABLE;
-        timer_ocinitpara.outputnstate = TIMER_CCXN_DISABLE;
-        timer_ocinitpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
-        timer_ocinitpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
-        timer_ocinitpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-        timer_ocinitpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-
-        timer_channel_output_config(TIMER0, TIMER_CH_0, &timer_ocinitpara);
-        timer_channel_output_mode_config(TIMER0, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-        timer_channel_output_shadow_config(TIMER0, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
-        timer_channel_output_pulse_value_config(TIMER0, TIMER_CH_0, 0);
-    } break;
     default:
         return false;
     }

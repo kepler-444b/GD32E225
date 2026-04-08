@@ -4,6 +4,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// config中上报顺序
+typedef struct
+{
+    uint8_t rpt;   // 上报模式
+    uint8_t order; // 上报次序
+    uint8_t reserve1;
+    uint8_t reserve2;
+} report;
+
+#define FLASH_PANEL_REPORT_TYPE      (0x0801B000U) // page 108
+#define FLASH_PANEL_KYE_NUM          (0x0801B400U) // page 109
 #define FLASH_PANEL_LED_TABLE        (0x0801B800U) // page 110
 #define FLASH_PANEL_LED_B_TABLE      (0x0801BC00U) // page 111
 #define FLASH_PANEL_LED_STATE_TABLE  (0x0801C000U) // page 112
@@ -46,12 +57,19 @@ bool switch_adapter_led_state_table_save(uint8_t *led_state_table, uint8_t len);
 bool switch_adapter_kj_mode_table_read(uint8_t *kj_mode_table, uint8_t len);
 bool switch_adapter_kj_mode_table_save(uint8_t *kj_mode_table, uint8_t len);
 
-bool switch_adapter_delay_table_read(uint8_t *delay_table);
+// 按键个数读写
+bool key_num_save(uint8_t key_num);
+bool key_num_read(uint8_t *key_num);
 
-void switch_adapter_relay_ctrl(uint8_t id, uint8_t connect);
+// 上报模式读写
+bool report_type_save(report *report);
+bool report_type_read(report *report);
+
+bool switch_adapter_delay_table_read(uint8_t *delay_table);
+void switch_relay_ctrl(uint8_t id, uint8_t connect);
 void switch_adapter_led_bk_ctrl(uint8_t id, uint8_t onoff);
-void switch_adapter_led_ctrl(uint8_t id, uint8_t onoff);
+void switch_led_ctrl(uint8_t id, uint8_t onoff);
 void switch_adapter_led_b_ctrl(uint8_t id, uint8_t onoff);
-void switch_adapter_ad_led_b_ctrl(uint8_t id, uint8_t lum, uint8_t duration_ms);
+void switch_led_b_ctrl(uint8_t id, uint8_t lum, uint8_t duration_ms);
 
 #endif

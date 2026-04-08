@@ -1,10 +1,10 @@
-#include "gd32e23x.h"
-#include <stdio.h>
 #include "eventbus.h"
 #include "../base/debug.h"
+#include "gd32e23x.h"
+#include <stdio.h>
 
-#define MAX_EVENT_HANDLERS 8  // 最大事件处理器数量(最多有8个模块/组件订阅事件)
-#define EVENT_QUEUE_SIZE   16 // 事件队列大小(最多能缓存16个待处理的事件)
+#define MAX_EVENT_HANDLERS 8 // 最大事件处理器数量(最多有8个模块/组件订阅事件)
+#define EVENT_QUEUE_SIZE 16  // 事件队列大小(最多能缓存16个待处理的事件)
 
 // 事件处理器数组
 static EventHandler eventHandlers[MAX_EVENT_HANDLERS];
@@ -36,11 +36,13 @@ void app_eventbus_subscribe(EventHandler handler)
 // 发布事件(带参数)
 void app_eventbus_publish(event_type_e event, void *params)
 {
-    if (event >= EVENT_COUNT) return;
-    if (queueSize >= EVENT_QUEUE_SIZE) return; // 队列满
+    if (event >= EVENT_COUNT)
+        return;
+    if (queueSize >= EVENT_QUEUE_SIZE)
+        return; // 队列满
 
     eventQueue[queueHead] = (event_t){event, params};
-    queueHead             = (queueHead + 1) % EVENT_QUEUE_SIZE;
+    queueHead = (queueHead + 1) % EVENT_QUEUE_SIZE;
     queueSize++;
 }
 
@@ -49,7 +51,7 @@ void app_eventbus_poll(void)
 {
     while (queueSize > 0) {
         event_t currentEvent = eventQueue[queueTail];
-        queueTail            = (queueTail + 1) % EVENT_QUEUE_SIZE;
+        queueTail = (queueTail + 1) % EVENT_QUEUE_SIZE;
         queueSize--;
 
         // 调用所有订阅者的处理函数

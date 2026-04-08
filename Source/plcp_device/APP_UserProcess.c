@@ -87,6 +87,8 @@
 const char *ae_num[AE_NUM_SIZE] = AE_NUM_VALUES;
 
 void PLCP_Load_Product(char *product);
+void PLCP_Load_McuVer(char *product);
+
 void MCU_Load_Product(void)
 {
     PLCP_Load_Product(PLCP_Callback_Product());
@@ -153,7 +155,6 @@ void APP_PLCSDK_Init(void)
     APP_RxBuffer_init();
     // APP_GroupClr();
     // APP_SceneClr();
-    // APP_SpecialSceneinit();
 
     APP_ReadBindParameter(); // 读取绑定信息
     // APP_Bindinit();          // Bind 订阅事件总线
@@ -250,20 +251,12 @@ uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
         for (uint8_t i = 0; i < KEY_NUMBER; i++) {
             if (ctrl_bits & (1 << (15 - i))) {
                 uint8_t status = buf[3 + idx];
-                attr_button_mode_table_set(i, status);
+                attr_kj_mode_table_set(i, status);
                 idx++;
             }
         }
     } break;
-    case ENABLE_LED: {
-        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            if (ctrl_bits & (1 << (15 - i))) {
-                uint8_t status = buf[3 + idx];
-                attr_led_relay_table_set(i, status);
-                idx++;
-            }
-        }
-    } break;
+
     case SCENE_LINK: {
         special_scene_set(buf, buf_len);
     } break;
@@ -277,6 +270,26 @@ uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
         }
     } break;
 
+    case REPORT_TYPE: {
+        bool rpt = BIT15(ctrl_bits);
+        bool order = BIT14(ctrl_bits);
+
+        report *temp = attr_report_type_get();
+
+        if (rpt && !order) { // 只设置rpt
+            temp->rpt = buf[3];
+        }
+        if (!rpt && order) { // 只设置order
+            temp->order = buf[3];
+        }
+        if (rpt && order) { // 都设置
+            temp->rpt = buf[3];
+            temp->order = buf[4];
+        }
+        attr_report_type_set(temp); // 保存到flash
+
+        attr_report_type_get(); // 设置完成后,读到全局静态变量
+    } break;
     default:
         return 0;
     }
@@ -284,16 +297,148 @@ uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
     return 1;
 }
 
-/*--------------------------------------------------------------
-函数名称：MCU_Scene_On
-函数功能：启动场景
-输出参数：buf - 场景号清单
-返回值：
-备 注：根据实际的场景数据运行，数据格式可参考对应的协议
----------------------------------------------------------------*/
+uint8_t MCU_Get_Config(uint8_t *buf, uint8_t type, uint16_t bits)
+{
+    APP_PRINTF("MCU_Get_Config\n");
+    uint8_t count = 0;
+    buf[count++] = type;
+    buf[count++] = (bits >> 8) & 0xFF;
+    buf[count++] = bits & 0xFF;
+
+    switch (type) {
+    case KJ_MODE: {
+        for (uint8_t i = 0; i < 16; i++) {
+            if (BIT_HIGH_TO_LOW(bits, i)) {
+                buf[count++] = attr_kj_mode_table_get(i);
+            }
+        }
+        return count;
+    } break;
+
+    case SCENE_LINK: {
+
+        if ((bits >> 15) & 0x01) { // 延时
+            DelayScene_t *obj = special_delay_scene_get();
+            buf[count++] = obj->enable;
+            buf[count++] = (uint8_t)(obj->scene_id & 0xFF);
+            buf[count++] = (uint8_t)(obj->scene_id >> 8);
+            buf[count++] = (uint8_t)(obj->scene_timer & 0xFF);
+            buf[count++] = (uint8_t)(obj->scene_timer >> 8);
+        }
+        if ((bits >> 14) & 0x01) { // 夜灯
+            NightScene_t *obj = special_night_scene_get();
+            buf[count++] = obj->night_enable;
+            buf[count++] = (uint8_t)(obj->open_night & 0xFF);
+            buf[count++] = (uint8_t)(obj->open_night >> 8);
+            buf[count++] = (uint8_t)(obj->close_night & 0xFF);
+            buf[count++] = (uint8_t)(obj->close_night >> 8);
+        }
+
+        return count;
+    } break;
+    case RELAY_POWER_UP: {
+        for (uint8_t i = 0; i < 16; i++) {
+            if (BIT_HIGH_TO_LOW(bits, i)) {
+                buf[count++] = attr_relay_power_up_table_get(i);
+            }
+        }
+        return count;
+    } break;
+    // case KEY_NUM: {
+    //     buf[count++] = attr_key_num_get();
+    //     return count;
+    // } break;
+    case REPORT_TYPE: {
+        report *p_report = NULL;
+        p_report = attr_report_type_get();
+
+        if (BIT15(bits) && !BIT14(bits)) {
+            buf[count++] = p_report->rpt;
+            return count;
+        }
+        if (!BIT15(bits) && BIT14(bits)) {
+            buf[count++] = p_report->order;
+            return count;
+        }
+        if (BIT15(bits) && BIT14(bits)) {
+            buf[count++] = p_report->rpt;
+            buf[count++] = p_report->order;
+            return count;
+        }
+    } break;
+    case NULL_TYPE_CONFIG: {
+
+        count = 0;
+        // 按键类型
+        buf[count++] = KJ_MODE;
+        buf[count++] = (uint8_t)(0xFF << (8 - KEY_NUMBER));
+        buf[count++] = 0x00;
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+            buf[count++] = attr_kj_mode_table_get(i);
+        }
+
+        // 场景联动属性
+        buf[count++] = SCENE_LINK;
+        buf[count++] = 0xC0;
+        buf[count++] = 0x00;
+
+        DelayScene_t *temp = special_delay_scene_get();
+        if (temp == NULL) {
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+        } else {
+            buf[count++] = temp->enable;
+            buf[count++] = (uint8_t)(temp->scene_id & 0xFF);
+            buf[count++] = (uint8_t)(temp->scene_id >> 8);
+            buf[count++] = (uint8_t)(temp->scene_timer & 0xFF);
+            buf[count++] = (uint8_t)(temp->scene_timer >> 8);
+        }
+
+        NightScene_t *obj = special_night_scene_get();
+        if (obj == NULL) {
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+            buf[count++] = 0x00;
+        } else {
+            buf[count++] = obj->night_enable;
+            buf[count++] = (uint8_t)(obj->open_night & 0xFF);
+            buf[count++] = (uint8_t)(obj->open_night >> 8);
+            buf[count++] = (uint8_t)(obj->close_night & 0xFF);
+            buf[count++] = (uint8_t)(obj->close_night >> 8);
+        }
+
+        // 上报方式
+        buf[count++] = REPORT_TYPE;
+        report *p_report = NULL;
+        p_report = attr_report_type_get();
+        if (BIT15(bits) && !BIT14(bits)) {
+            buf[count++] = p_report->rpt;
+        }
+        if (!BIT15(bits) && BIT14(bits)) {
+            buf[count++] = p_report->order;
+        }
+        if (BIT15(bits) && BIT14(bits)) {
+            buf[count++] = p_report->rpt;
+            buf[count++] = p_report->order;
+        }
+
+        return count;
+        break;
+    }
+    default:
+        break;
+    }
+    return 0;
+}
+
+// 执行默认场景
 void MCU_Scene_exe(uint8_t *buf, uint8_t buf_len)
 {
-    // APP_PRINTF("MCU_Scene_exe\n");
 #if defined PLCP_PANEL
     parse_control_commands(buf, buf_len);
 #elif defined PLCP_LIGHT_CT
@@ -301,15 +446,15 @@ void MCU_Scene_exe(uint8_t *buf, uint8_t buf_len)
 #endif
 }
 
+// 执行控件场景
 void MCU_SceneKj_exe(uint8_t *buf, uint8_t kj_index, uint8_t kj_type)
 {
-    if (buf[0] != 0x01) {
+    if (buf[0] != 0x01) { // 如果没有 "开场景",直接返回
         return;
     }
     switch (kj_type) {
-    case LED_SCENE:
-        attr_led_table_set(kj_index, buf[1]);
-        attr_key_state_table_set(kj_index, buf[1]); // 按键状态与LED同步
+    case LED_SCENE: // LED 场景
+        attr_key_state_table_set(kj_index, buf[1]);
         break;
     case CH_SCENE:
         attr_relay_table_set(kj_index, buf[1]);
@@ -320,43 +465,42 @@ void MCU_SceneKj_exe(uint8_t *buf, uint8_t kj_index, uint8_t kj_type)
 }
 
 // 对于清理勿扰,插卡后恢复
-
 void MCU_dnd_recover(void)
 {
-    uint8_t k1_status;
-    uint8_t k2_status;
-#if defined PANEL_3KEY
+    //     uint8_t k1_status;
+    //     uint8_t k2_status;
+    // #if defined PANEL_3KEY
 
-    k1_status = attr_led_table_get(2);
-    k2_status = attr_led_table_get(3);
+    //     k1_status = attr_led_table_get(2);
+    //     k2_status = attr_led_table_get(3);
 
-    attr_led_table_set(2, k1_status);
-    attr_led_table_set(3, k2_status);
+    //     attr_led_table_set(2, k1_status);
+    //     attr_led_table_set(3, k2_status);
 
-    // 因为使用 MCU_dnd_recover 跳过了正常的场景执行,对于亚朵3.6的三键竖向面板,卫浴灯在这里做特殊处理
-    attr_led_table_set(0, true);
-    attr_key_state_table_set(0, true);
-    switch_adapter_ad_led_b_ctrl(0, 0, 1);
+    //     // 因为使用 MCU_dnd_recover 跳过了正常的场景执行,对于亚朵3.6的三键竖向面板,卫浴灯在这里做特殊处理
+    //     attr_led_table_set(0, true);
+    //     attr_key_state_table_set(0, true);
+    //     switch_led_b_ctrl(0, 0, 1);
 
-    switch_adapter_ad_led_b_ctrl(2, k1_status ? 0 : 100, 1);
-    switch_adapter_ad_led_b_ctrl(3, k2_status ? 0 : 100, 1);
+    //     switch_led_b_ctrl(2, k1_status ? 0 : 100, 1);
+    //     switch_led_b_ctrl(3, k2_status ? 0 : 100, 1);
 
-#elif defined PANEL_4KEY
-    k1_status = attr_led_table_get(0);
-    k2_status = attr_led_table_get(1);
+    // #elif defined PANEL_4KEY
+    //     k1_status = attr_led_table_get(0);
+    //     k2_status = attr_led_table_get(1);
 
-    attr_led_table_set(0, k1_status);
-    attr_led_table_set(3, k1_status);
+    //     attr_led_table_set(0, k1_status);
+    //     attr_led_table_set(3, k1_status);
 
-    switch_adapter_led_b_ctrl(0, !k1_status);
-    switch_adapter_led_b_ctrl(3, !k1_status);
+    //     switch_adapter_led_b_ctrl(0, !k1_status);
+    //     switch_adapter_led_b_ctrl(3, !k1_status);
 
-    attr_led_table_set(1, k2_status);
-    attr_led_table_set(2, k2_status);
+    //     attr_led_table_set(1, k2_status);
+    //     attr_led_table_set(2, k2_status);
 
-    switch_adapter_led_b_ctrl(1, !k2_status);
-    switch_adapter_led_b_ctrl(2, !k2_status);
-#endif
+    //     switch_adapter_led_b_ctrl(1, !k2_status);
+    //     switch_adapter_led_b_ctrl(2, !k2_status);
+    // #endif
 }
 
 void MCU_Group_State(uint8_t *buf, uint8_t buf_len)
@@ -405,13 +549,32 @@ void MCU_GroupKj_Off(uint8_t status, uint8_t kj_index, uint8_t kj_type)
 void MCU_Device_Factory(void)
 {
     printf("MCU_Device_Factory\n");
-    APP_Attribute_Init();
-    APP_SceneGroupClr(); // 清空场景与群组
-    PLCP_bindTableClr();
-    attr_kj_mode_table_reset(); // 按键类型恢复默认
 
     delay_1ms(100);
-    // NVIC_SystemReset();
+
+    // 恢复出厂设置闪烁
+    for (uint8_t cycle = 0; cycle < 2; cycle++) {
+        // 全部亮
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+            switch_led_ctrl(i, true);
+        }
+        delay_1ms(500);
+
+        // 全部灭
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+            switch_led_ctrl(i, false);
+        }
+        delay_1ms(500);
+    }
+
+    CmdTest_MSE_Factory();      // 模组恢复出厂设置
+    APP_Attribute_Init();       // 清空联网状态
+    APP_SceneGroupClr();        // 清空场景与群组
+    PLCP_bindTableClr();        // 清空绑定信息
+    APP_SpecialSceneClr();      // 清空特殊场景
+    attr_kj_mode_table_reset(); // 按键类型恢复默认
+
+    NVIC_SystemReset();
 }
 
 /*****************************************************************************
@@ -500,11 +663,25 @@ void MCU_Proactively_report(void)
 使用说明 : 上位机获取设备状态，该函数实现将状态数据按照协议要求进行组帧
 *****************************************************************************/
 
+// 获取 state
 uint8_t MCU_Get_Devicestatus(uint8_t *buf, uint8_t type, uint16_t bits)
 {
 #if defined PLCP_PANEL
     uint8_t count = 0;
+    buf[count++] = type;
+    buf[count++] = (bits >> 8) & 0xFF;
+    buf[count++] = bits & 0xFF;
+
     switch (type) {
+    case BUTTON_TYPE: {
+        for (uint8_t i = 0; i < 16; i++) {
+            if (BIT16_HIGH_TO_LOW(bits, i)) {
+                buf[count++] = attr_key_state_table_get(i);
+            }
+        }
+        return count;
+    } break;
+
     case REALY_TYPE: {
         for (uint8_t i = 0; i < 16; i++) {
             if (BIT16_HIGH_TO_LOW(bits, i)) {
@@ -513,9 +690,71 @@ uint8_t MCU_Get_Devicestatus(uint8_t *buf, uint8_t type, uint16_t bits)
         }
         return count;
     } break;
+
+    case BLCK_TYPE: {
+        for (uint8_t i = 0; i < 16; i++) {
+            if (i < 8) {
+                if (BIT16_HIGH_TO_LOW(bits, i)) { // 按键背光灯
+                    if (attr_ad_led_b_table_get(i)) {
+                        buf[count++] = 0x01;
+                    } else {
+                        buf[count++] = 0x00;
+                    }
+                }
+            } else {
+                if (BIT16_HIGH_TO_LOW(bits, i)) { //  按键指示灯
+                    buf[count++] = attr_led_table_get(i - 8);
+                }
+            }
+        }
+        return count;
+    } break;
+
+    case ADJUST_BLCK_TYPE: {
+        for (uint8_t i = 0; i < 16; i++) {
+            if (BIT16_HIGH_TO_LOW(bits, i)) {
+                buf[count++] = attr_ad_led_b_table_get(i);
+            }
+        }
+        return count;
+    } break;
+
+    case NULL_TYPE: {
+        count = 0;
+        buf[count++] = BUTTON_TYPE;
+        buf[count++] = (uint8_t)(0xFF << (8 - KEY_NUMBER));
+        buf[count++] = 0x00;
+
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) { // 按键状态
+            buf[count++] = attr_key_state_table_get(i);
+        }
+        buf[count++] = BLCK_TYPE;
+        buf[count++] = (uint8_t)(0xFF << (8 - KEY_NUMBER));
+        buf[count++] = (uint8_t)(0xFF << (8 - KEY_NUMBER));
+
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) { // LED 状态
+            if (attr_ad_led_b_table_get(i)) {
+                buf[count++] = 0x01;
+            } else {
+                buf[count++] = 0x00;
+            }
+        }
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+            buf[count++] = attr_led_table_get(i);
+        }
+
+        buf[count++] = ADJUST_BLCK_TYPE;
+        buf[count++] = (uint8_t)(0xFF << (8 - KEY_NUMBER));
+        buf[count++] = bits & 0x00;
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) { // 可调背光状态
+            buf[count++] = attr_ad_led_b_table_get(i);
+        }
+        return count;
+    } break;
     default:
         break;
     }
+
 #elif defined PLCP_LIGHT_CT
     buf[0] = 0x30;
     buf[1] = 0x00;
@@ -536,50 +775,15 @@ uint8_t MCU_Get_Devicestatus(uint8_t *buf, uint8_t type, uint16_t bits)
     return 0;
 }
 
+// 设置 state
 void MCU_Put_Devicestatus(uint8_t *buf, uint8_t buf_len)
 {
-    APP_PRINTF_BUF("MCU_Put_Devicestatus", buf, buf_len);
 #if defined PLCP_PANEL
     switch_status_by_bits(buf, buf_len);
 #elif defined PLCP_LIGHT_CT
     light_ct_ctrl(buf, buf_len);
 
 #endif
-}
-
-uint8_t MCU_Get_Config(uint8_t *buf, uint8_t type, uint16_t bits)
-{
-    APP_PRINTF("MCU_Get_Config\n");
-    uint8_t count = 0;
-    switch (type) {
-    case ENABLE_LED: {
-        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            if (BIT_HIGH_TO_LOW(bits, i)) {
-                buf[count++] = attr_led_relay_table_get(i);
-            }
-        }
-        return count;
-    } break;
-    case RELAY_POWER_UP: {
-        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            if (BIT_HIGH_TO_LOW(bits, i)) {
-                buf[count++] = attr_relay_power_up_table_get(i);
-            }
-        }
-        return count;
-    } break;
-    case KJ_MODE: {
-        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            if (BIT_HIGH_TO_LOW(bits, i)) {
-                buf[count++] = attr_kj_mode_table_get(i);
-            }
-        }
-        return count;
-    } break;
-    default:
-        break;
-    }
-    return 0;
 }
 
 /*****************************************************************************
@@ -591,17 +795,10 @@ uint8_t MCU_Get_Config(uint8_t *buf, uint8_t type, uint16_t bits)
 *****************************************************************************/
 uint8_t MCU_Get_Ver(uint8_t *buf)
 {
-    APP_PRINTF("MCU_Get_Ver\n");
-    /****************************示例**********************************/
-    uint8_t softver;
-    uint8_t ver[6] = {0x01, 0x00, 0x20, 0x24, 0x09, 0x26};
-    // softver = get_version();
-    softver = 1;
-    ver[0] = softver >> 4;
-    ver[1] = softver & 0x0F;
+    uint8_t ver[8] = {0x00, 0x00, 0x00, 0x01, 0x20, 0x26, 0x04, 0x7};
+
     memcpy(buf, ver, sizeof(ver));
     return sizeof(ver);
-    /*****************************************************************/
 }
 
 uint8_t MCU_UartReceive(uint8_t *recbuf, uint16_t reclen)
@@ -630,7 +827,6 @@ void MCU_Send_date(uint8_t *SendBuff, uint16_t SendBuffLen)
 #endif
 }
 
-// #include "../Source/timer/timer.h"
 void APP_Queue_ListenAndHandleMessage(void)
 {
     RxDataParametersStruct rxDataPointer;
@@ -644,7 +840,6 @@ void APP_Queue_ListenAndHandleMessage(void)
         APP_RxBuffer_DeleteFirstMsg();                                         // 删除已经处理的数据
     }
     if (APP_TxBuffer_GetFirstMsgDataParameters(&txTask)) { // 检查队列是否 有需要发送的数据
-        // APP_PRINTF("time:%d\n", app_timer_get_ticks());
         app_usart_tx_buf(txTask.nsdu, txTask.nsduLength, USART0);
     }
 }

@@ -8,27 +8,6 @@
 
 fmc_state_enum app_flash_read(uint32_t address, uint32_t *data, uint32_t length)
 {
-#if 0
-    fmc_state_enum state = FMC_READY;
-
-    if ((address % 4) || (length % 4) || !data) {
-        return FMC_PGAERR; // 返回编程对齐错误
-    }
-    fmc_unlock(); // 解锁Flash操作
-
-    state = fmc_ready_wait(FMC_TIMEOUT_COUNT); // 等待Flash就绪
-    if (state != FMC_READY) {
-        fmc_lock(); // 如果超时则重新上锁
-        return state;
-    }
-
-    for (uint32_t i = 0; i < length / 4; i++) { // 逐字读取数据
-        data[i] = REG32(address + (i * 4));     // 使用寄存器访问宏读取
-    }
-    fmc_lock(); // 重新锁定Flash
-    return FMC_READY;
-#else
-
     if ((address % 4) || (length % 4) || !data) {
         return FMC_PGAERR; // 编程对齐错误
     }
@@ -37,7 +16,6 @@ fmc_state_enum app_flash_read(uint32_t address, uint32_t *data, uint32_t length)
     }
 
     return FMC_READY;
-#endif
 }
 
 fmc_state_enum app_flash_write_word(uint32_t address, uint32_t *data, uint32_t length)

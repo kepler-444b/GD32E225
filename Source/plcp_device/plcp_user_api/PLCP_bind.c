@@ -3,9 +3,9 @@
 #include "../../Source/eventbus/eventbus.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../../Source/plcp_device/MseProcess.h"
+#include "../../Source/plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/plcp_device/plcp_user_api/plcp_sdk_api.h"
 #include "../../cJSON/cJSON.h"
-#include "systick.h"
 
 #define MAX_PAYLOAD_LEN 400
 #define REPORT_TARGET_RES "/_e"
@@ -21,8 +21,8 @@ typedef struct {
 #pragma pack(4)
 typedef struct {
     uint8_t se;
-    char aei[AEI_MAX_LEN + 1];
-    char id[AEI_MAX_LEN + 1];
+    char aei[AEI_MAX_LEN];
+    char id[AEI_MAX_LEN];
     char msg[MAX_BIND_MSG_LEN];
     uint16_t padding;
 } bindDataType;
@@ -31,11 +31,6 @@ typedef struct {
 #if (MAX_BIND_TABLE_SIZE > 0)
 // static void plcp_panel_event(event_type_e event, void *params);
 static bindDataType gBindDataBase[MAX_BIND_TABLE_SIZE];
-
-// void APP_Bindinit(void)
-// {
-//     app_eventbus_subscribe(plcp_panel_event);
-// }
 
 // 保存绑定信息到flash
 static fmc_state_enum APP_SaveBindParameter(void)
@@ -59,7 +54,7 @@ fmc_state_enum APP_ReadBindParameter(void)
         if (gBindDataBase[i].se == 0) {
             gBindDataBase[i].se = 0xff;
         } else if (gBindDataBase[i].se != 0xFF) {
-            APP_PRINTF("gBindDataBase[%d].se[%02X]\n", i, gBindDataBase[i].se);
+            // APP_PRINTF("gBindDataBase[%d].se[%02X]\n", i, gBindDataBase[i].se);
             APP_PRINTF(".ae[%s].id[%s].msg[%s]\n", gBindDataBase[i].aei, gBindDataBase[i].id, gBindDataBase[i].msg);
         }
     }
@@ -75,24 +70,25 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg)
     for (i = 0; i < MAX_BIND_TABLE_SIZE; i++) { // 第一轮循环:查找是否已经存在相同的绑定记录
         if (gBindDataBase[i].se == se && strcmp(gBindDataBase[i].aei, aei) == 0 && strcmp(gBindDataBase[i].id, id) == 0) {
             strcpy(gBindDataBase[i].msg, msg);
-            APP_PRINTF("save1\n");
+
             if (APP_SaveBindParameter() != FMC_READY) {
                 APP_PRINTF("APP_SaveBindParameter error\n");
             }
+            APP_ReadBindParameter();
             return 1;
         }
     }
     for (i = 0; i < MAX_BIND_TABLE_SIZE; i++) { // 第二轮循环:如果没有找到,则找一个空位置写入新记录
         if (gBindDataBase[i].se == 0xff) {
-            APP_PRINTF("save[%d]\n", i);
             gBindDataBase[i].se = se;
             strcpy(gBindDataBase[i].aei, aei);
             strcpy(gBindDataBase[i].id, id);
             strcpy(gBindDataBase[i].msg, msg);
-            APP_PRINTF("save2\n");
+            APP_PRINTF("id:%s\n", id);
             if (APP_SaveBindParameter() != FMC_READY) {
                 APP_PRINTF("APP_SaveBindParameter error\n");
             }
+            APP_ReadBindParameter();
             return 1;
         }
     }
@@ -103,16 +99,30 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg)
 char *PLCP_bindTableRead(uint8_t se, char *aei, char *id)
 {
     for (uint8_t i = 0; i < MAX_BIND_TABLE_SIZE; i++) {
-#if 0
-        APP_PRINTF("gBindDataBase[%d].se:%d  se:%d\n", i, gBindDataBase[i].se, se);
-        APP_PRINTF("gBindDataBase[%d].aei:%.*s  aei:%.*s\n", i, 12, gBindDataBase[i].aei, 12, aei);
-        APP_PRINTF("gBindDataBase[%d].id,:%.*s  id:%.*s\n", i, 12, gBindDataBase[i].id, 12, id);
-#endif
         if (gBindDataBase[i].se == se && strcmp(gBindDataBase[i].aei, aei) == 0 && strcmp(gBindDataBase[i].id, id) == 0) {
             return (gBindDataBase[i].msg);
         }
     }
     return NULL;
+}
+
+// 在绑定信息中根据,场景号和cmd,查找是哪个按键aei
+uint8_t PLCP_BindTableRead_aei(const char *group_num, const char *cmd, aei_t out_aei[], uint8_t max_num)
+{
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < MAX_BIND_TABLE_SIZE; i++) {
+
+        if (strstr(gBindDataBase[i].msg, group_num) != NULL &&
+
+            strstr(gBindDataBase[i].msg, cmd) != NULL) {
+            if (count < max_num) {
+                strcpy(out_aei[count], gBindDataBase[i].aei);
+                count++;
+            }
+        }
+    }
+    return count;
 }
 
 char *PLCP_bindTableReadMsgByIndex(uint8_t index)
@@ -136,7 +146,7 @@ uint8_t PLCP_bindTableReadByAEI(uint8_t se, char *aei, uint8_t startIndex)
     return 0xFF;
 }
 
-// 退出绑定
+// 删除绑定
 uint8_t PLCP_bindTableDelet(uint8_t se, char *aei, char *id)
 {
     uint8_t i;
@@ -146,22 +156,20 @@ uint8_t PLCP_bindTableDelet(uint8_t se, char *aei, char *id)
         }
     }
     APP_SaveBindParameter();
+    APP_ReadBindParameter();
     return 1;
 }
 
 // 清空绑定
 void PLCP_bindTableClr(void)
 {
-    // for (uint8_t i = 0; i < MAX_BIND_TABLE_SIZE; i++) {
-    //     gBindDataBase[i].se = 0xFF;
-    // }
     app_flash_erase_page(FLASH_BIND_INFO_H_START_ADD);
-    // APP_SaveBindParameter();
 }
 
 // 统计写入绑定命令的参数中有多少条绑定数据
 uint16_t PLCP_CountBindDataInAddBindParam(uint8_t *bindParam, uint8_t bindParamLen)
 {
+#if 0
     /************************************
     {
         "kj":"k1@se1",
@@ -197,11 +205,13 @@ uint16_t PLCP_CountBindDataInAddBindParam(uint8_t *bindParam, uint8_t bindParamL
     -->
     bind -> 2
     ******************************/
-    U16 ret = 0;
-    U16 error = 0;
-    U8 ae_include = 0;
-    U8 rsl_include = 0;
-    U8 rsi_include = 0;
+#endif
+
+    uint16_t ret = 0;
+    uint16_t error = 0;
+    uint8_t ae_include = 0;
+    uint8_t rsl_include = 0;
+    uint8_t rsi_include = 0;
 
     if (bindParam == 0 || bindParamLen == 0) {
         return 0;
@@ -320,6 +330,7 @@ static uint8_t kjToEventSEAndAEI(char *kjStr, uint8_t *eventSE, char *eventAEI)
 // 从写入绑定命令的参数中读取第n条绑定数据
 uint8_t PLCP_GetBindDataInAddBindParam(uint8_t *bindParam, uint8_t bindParamLen, uint8_t index, uint8_t *eventSE, char *eventAEI, char *eventID, char *msg)
 {
+    // APP_PRINTF("eventAEI:%s\n", eventAEI);
     /************************************
     {
         "kj":"k1@se1",
@@ -419,6 +430,10 @@ uint8_t PLCP_GetBindDataInAddBindParam(uint8_t *bindParam, uint8_t bindParamLen,
     char *p = (char *)bindParam;
     char *kjStr = NULL;
     char *aeStr = NULL;
+
+    memset(eventAEI, 0, AEI_MAX_LEN);
+    memset(eventID, 0, AEI_MAX_LEN);
+    memset(msg, 0, MAX_BIND_MSG_LEN);
 
     // 解析 kj
     kjStr = strstr(p, "\"kj\"");
@@ -542,10 +557,6 @@ uint8_t PLCP_GetBindDataInAddBindParam(uint8_t *bindParam, uint8_t bindParamLen,
     } else {
         snprintf(msg, MAX_BIND_MSG_LEN, "{\"rsl\":\"%s%s\",\"data\":\"%s\"}", aeBuf, rsiBuf, dataBuf);
     }
-
-    // printf("get event %s @ SE%d %s in param\n", eventAEI, *eventSE, eventID);
-    // printf("get msg %s in param\n", msg);
-
     return 1;
 #endif
 }
@@ -575,130 +586,6 @@ static uint8_t bindMsgToBindJsonItem(cJSON *bindItem, char *msg, char *id)
 
 uint16_t PLCP_GetBindData(uint8_t *bindParam, uint8_t bindParamLen, uint8_t *bindData)
 {
-    /*********************************************
-    {
-      "kj":"k1@se1",//要查询的控件名称
-      "id":"_press"//要查询的事件名称
-    }
-    -->
-    event_se: 1; event_aei: k1; evet_id: _press;
-    -->
-    msg: {"rsl":"0500@SE0.FFFFFFFFFFFF/0/_on","data":""}
-    -->
-    {
-        "kj":"k1@se1",
-        "bind":[
-            {
-                "id":"_press",
-                "rsl":"0500@SE0.FFFFFFFFFFFF/0/_on",
-                "data":""
-            }
-        ]
-    }
-
-    {
-      "kj":"k1@se1",//要查询的控件名称
-    }
-    -->
-    event_se: 1; event_aei: k1; evet_id: ALL;
-    -->
-    msg: {"rsl":"0500@SE0.FFFFFFFFFFFF/0/_on","data":""}
-    ...
-    -->
-    {
-        "kj":"k1@se1",
-        "bind":[
-            {
-                "id":"_press",
-                "rsl":"0500@SE0.FFFFFFFFFFFF/0/_on",
-                "data":""
-            },
-            {
-                "id":"_press2",
-                "rsl":"0500@SE0.FFFFFFFFFFFF/0/_on",
-                "data":""
-            }...
-        ]
-    }
-    *********************************************/
-#if 0
-    APP_PRINTF("PLCP_GetBindData\n");
-    cJSON *paramJson    = NULL;
-    cJSON *bindDataJson = NULL;
-    cJSON *bind         = NULL;
-    cJSON *bindItem     = NULL;
-    cJSON *kj           = NULL;
-    cJSON *id           = NULL;
-    char *tempStr       = NULL;
-
-    uint8_t eventSE;
-    char eventAEI[AEI_MAX_LEN];
-    char *msg;
-    uint16_t len = 0;
-
-    if (bindParam == 0 || bindParamLen == 0 || bindData == 0) {
-        goto getBindDataEnd;
-    }
-
-    paramJson = cJSON_Parse((char *)bindParam);
-    kj        = cJSON_GetObjectItem(paramJson, "kj");
-    id        = cJSON_GetObjectItem(paramJson, "id");
-    memset(eventAEI, 0, AEI_MAX_LEN);
-    if (1 != kjToEventSEAndAEI(kj->valuestring, &eventSE, eventAEI)) {
-        goto getBindDataEnd;
-    }
-    // uint8_t index;
-    char eventID[AEI_MAX_LEN];
-    bind = cJSON_CreateArray();
-    if (id != NULL) {
-        memset(eventID, 0, AEI_MAX_LEN);
-        strcpy(eventID, id->valuestring);
-        bindItem = cJSON_CreateObject();
-        msg      = PLCP_bindTableRead(eventSE, eventAEI, eventID);
-        bindMsgToBindJsonItem(bindItem, msg, eventID);
-        cJSON_AddItemToArray(bind, cJSON_Duplicate(bindItem, TRUE));
-        cJSON_Delete(bindItem);
-    }
-    // else
-    // {
-    // 	index = 0;
-    // 	while (1)
-    // 	{
-    // 		memset(eventID, 0, AEI_MAX_LEN);
-    // 		index = PLCP_eventTableGetEventIdWithStartIndex(eventSE, eventAEI, eventID, index);
-    // 		if(index == 0xff)
-    // 		{
-    // 			break;
-    // 		}
-
-    // 		bindItem = cJSON_CreateObject();
-    // 		msg = PLCP_bindTableRead(index);
-    // 		bindMsgToBindJsonItem(bindItem, msg, eventID);
-    // 		cJSON_AddItemToArray(bind, cJSON_Duplicate(bindItem, TRUE));
-    // 		cJSON_Delete(bindItem);
-    // 		index++;
-    // 	}
-    // }
-
-    bindDataJson = cJSON_CreateObject();
-    cJSON_AddStringToObject(bindDataJson, "kj", kj->valuestring);
-    cJSON_AddItemToObject(bindDataJson, "bind", bind);
-    tempStr = cJSON_PrintUnformatted(bindDataJson);
-    len     = strlen(tempStr);
-    if (len > MAX_PAYLOAD_LEN) {
-        len = 0;
-        goto getBindDataEnd;
-    }
-
-    strcpy((char *)bindData, tempStr);
-    APP_PRINTF("bindData:%s\n", bindData);
-getBindDataEnd:
-    cJSON_free(tempStr);
-    cJSON_Delete(paramJson);
-    cJSON_Delete(bindDataJson);
-    cJSON_Delete(bind);
-    return len;
-#else
     uint8_t eventSE = 0;
     char eventAEI[AEI_MAX_LEN] = {0};
     char eventID[AEI_MAX_LEN] = {0};
@@ -809,9 +696,8 @@ getBindDataEnd:
                 remain--;
             }
             first = 0;
-
             // 拼接单条记录：把 msg 尾部 } 去掉，再加 ,"id":"xxx"}
-            size_t msgLen = strlen(msg);
+            uint16_t msgLen = strlen(msg);
             if (msg[0] == '{' && msg[msgLen - 1] == '}') {
                 msg[msgLen - 1] = '\0';
             }
@@ -833,7 +719,6 @@ getBindDataEnd:
         len = p - (char *)bindData;
     }
     return len;
-#endif
 }
 
 // 统计删除绑定命令的参数中有多少条事件的回调函数
@@ -1173,51 +1058,20 @@ uint8_t PLCP_eventReport(uint8_t eventSE, char *eventAEI, char *eventID, U32 dat
 
 /*****************************************************************/
 
-// typedef struct
-// {
-//     uint8_t eventSE;
-//     char *eventAEI;
-//     char *eventID;
-//     char *eventType;
-//     uint32_t eventValue;
-// } event_frame;
-// static event_frame my_event_frame;
-
 uint8_t PLCP_WigetEventWithType(uint8_t eventSE, char *eventAEI, char *eventID, U32 eventValue, char *eventType)
 {
-    // APP_PRINTF("eventID:%s\n", eventID);
     uint8_t ret_1, ret_2;
 
-    // 把事件上报到网关
-    // memset(&my_event_frame, 0, sizeof(event_frame));
-    // my_event_frame.eventAEI = eventAEI;
-    // my_event_frame.eventID = eventID;
-    // my_event_frame.eventSE = eventSE;
-    // my_event_frame.eventValue = eventValue;
-    // my_event_frame.eventType = eventType;
+    const report *p_report = app_report_get();
 
-    // app_eventbus_publish(PLCE_SEND_BIND_MSG, &my_event_frame);
-    // app_eventbus_publish(PLCP_EVENT_REPORT, &my_event_frame);
-
-    ret_2 = PLCP_sendBindMsg(eventSE, eventAEI, eventID, 0, 0);
-    ret_1 = PLCP_eventReport(eventSE, eventAEI, eventID, eventValue, eventType, REPORT_TARGET_RES);
-
+    if (p_report->order == 0x00) { // 先上报事件,再上报绑定信息
+        ret_1 = PLCP_eventReport(eventSE, eventAEI, eventID, eventValue, eventType, REPORT_TARGET_RES);
+        ret_2 = PLCP_sendBindMsg(eventSE, eventAEI, eventID, 0, 0);
+    } else if (p_report->order == 0x01) { // 先上报绑定信息,再上报事件
+        ret_2 = PLCP_sendBindMsg(eventSE, eventAEI, eventID, 0, 0);
+        ret_1 = PLCP_eventReport(eventSE, eventAEI, eventID, eventValue, eventType, REPORT_TARGET_RES);
+    }
     return (ret_1 || ret_2);
 }
-
-// static void plcp_panel_event(event_type_e event, void *params)
-// {
-//     event_frame *temp = (event_frame *)params;
-//     switch (event) {
-//     case PLCP_EVENT_REPORT:
-//         PLCP_eventReport(temp->eventSE, temp->eventAEI, temp->eventID, temp->eventValue, temp->eventType, REPORT_TARGET_RES);
-//         break;
-//     case PLCE_SEND_BIND_MSG:
-//         PLCP_sendBindMsg(temp->eventSE, temp->eventAEI, temp->eventID, 0, 0);
-//         break;
-//     default:
-//         break;
-//     }
-// }
 
 #endif

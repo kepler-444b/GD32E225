@@ -195,6 +195,25 @@ static char rsi[50];
 static uint8_t uartSendBuff[256];
 static u16 uartSendBuffLen = 0;
 static uint8_t productInit[256];
+
+void PLCP_Load_McuVer(char *product)
+{
+    UappsMessage testCoap;
+    char rsi[50] = "@./0/_mcuVer";
+    uint8_t uartSendBuff[100];
+    uint16_t uartSendBuffLen = 0;
+
+    UappsCreateMessage(&testCoap, UAPPS_TYPE_CON, UAPPS_REQ_PUT, rsi);
+
+    // 如果应用层要设置token ID的话
+    testCoap.token[0] = 0x52;
+    testCoap.token[1] = MSE_SET_Factory;
+
+    uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
+    APP_PRINTF_BUF("uartSendBuff", uartSendBuff, uartSendBuffLen);
+    app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
+}
+
 void PLCP_Load_Product(char *product)
 {
     memset(rsi, 0, sizeof(rsi));

@@ -34,7 +34,7 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>$$Device:GD32E225CB$SVD\GD32E23x.svd</SFDFile>
+          <SFDFile>D:\Keil\ARM\GigaDevice\GD32E23x_DFP\2.3.2\SVD\GD32E23x.SFR</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -339,7 +339,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>GD32E230</Define>
+              <Define>GD32E225</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\Firmware\CMSIS;..\..\Utilities;..\;..\..\Utilities\LCD_Commom;..\..\Firmware\GD32E23x_standard_peripheral\Include;..\..\Firmware\CMSIS\GD\GD32E23x\Include</IncludePath>
             </VariousControls>

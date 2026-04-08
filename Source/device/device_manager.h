@@ -11,24 +11,16 @@
 
 #if defined PLCP_PANEL
 
-// #define DND_MODE_PANEL // 特殊用法,对于清理勿扰,插卡后要恢复原来的状态(临时使用)
-
-// #define PANEL_1KEY
-// #define PANEL_2KEY // 用于亚朵3.6的 清理勿扰
-// #define PANEL_3KEY // 用于亚朵3.6的 入户门面板(竖向,3键)
+#define PANEL_TD // 横向面板
 #define PANEL_4KEY
+// #define PANEL_6KEY
 
-#if defined PANEL_1KEY
-#define KEY_NUMBER 6
-#elif defined PANEL_2KEY
-#define KEY_NUMBER 4
-#elif defined PANEL_3KEY
-#define KEY_NUMBER 4
-#elif defined PANEL_4KEY
+#if defined PANEL_4KEY
 #define KEY_NUMBER 4
 #elif defined PANEL_6KEY
 #define KEY_NUMBER 6
 #endif
+
 #define RELAY_NUMBER 4
 #endif
 
@@ -36,6 +28,5 @@
 #define KEY_NUMBER 0
 #endif
 
-#endif
-
+#endif // PLCP_DEVICE
 #endif
