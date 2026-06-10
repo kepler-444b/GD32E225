@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+
 #include "../../Source/device/device_manager.h"
 #include "../../Source/plcp_common/Inc/APP_RxBuffer.h"
 /*******************************************************************************/
@@ -124,4 +124,3 @@ uint16_t APP_RxBuffer_getRxBufferMsgAmount(void)
 {
     return APP_RxBufferDataParamArrayIndex;
 }
-#endif

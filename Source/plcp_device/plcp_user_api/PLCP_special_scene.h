@@ -21,9 +21,9 @@ typedef struct {
 typedef struct
 {
     uint8_t night_enable;
-    uint16_t open_night;  // 触发夜灯属性场景号
-    uint16_t close_night; // 退出夜灯属性场景号
-    uint8_t reserved;
+    uint16_t open_night;         // 触发夜灯属性场景号
+    uint16_t close_night;        // 退出夜灯属性场景号
+    uint8_t night_scene_current; // 夜灯模式当前状态(0:正常模式;1:夜灯模式;2:即将进入夜灯模式)
 } NightScene_t;
 
 uint8_t

@@ -106,6 +106,7 @@ void CmdTest_MSE_Load_AEInfo(const char *ae_num, uint8_t quantity, char *BrandNa
 uint8_t APP_SendRSL(char *rslStr, char *from, uint8_t *playload, uint8_t playloadLen);
 void mseprecess_init(void);
 void CmdTest_MSE_Factory(void);
+void CmdTest_MSE_Apply_net(uint8_t type, uint8_t def);
 /***********************************º¯ÊıÉùÃ÷ ½áÊø************************************/
 
 #endif

@@ -141,6 +141,7 @@ uint8_t PlcSdkCallbackOnOff(char *aei, uint8_t OnOff)
 #endif
 }
 
+#if 0
 uint8_t PlcSdkCallbackAeiToIndex(char *aei)
 {
     uint8_t index = 0xff;
@@ -161,3 +162,4 @@ uint8_t PlcSdkCallbackAeiToIndex(char *aei)
     }
     return index;
 }
+#endif

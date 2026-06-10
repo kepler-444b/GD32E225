@@ -16,7 +16,7 @@
  ********************************************************************************/
 // #include "lmexxx_conf.h"
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 
 /**
@@ -308,4 +308,4 @@ void toUpper(char *s)
         }
     }
 }
-#endif
+ 

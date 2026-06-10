@@ -14,7 +14,7 @@ typedef struct
 } report;
 
 #define FLASH_PANEL_REPORT_TYPE      (0x0801B000U) // page 108
-#define FLASH_PANEL_KYE_NUM          (0x0801B400U) // page 109
+#define FLASH_PANEL_KYE_STATE        (0x0801B400U) // page 109
 #define FLASH_PANEL_LED_TABLE        (0x0801B800U) // page 110
 #define FLASH_PANEL_LED_B_TABLE      (0x0801BC00U) // page 111
 #define FLASH_PANEL_LED_STATE_TABLE  (0x0801C000U) // page 112
@@ -57,9 +57,9 @@ bool switch_adapter_led_state_table_save(uint8_t *led_state_table, uint8_t len);
 bool switch_adapter_kj_mode_table_read(uint8_t *kj_mode_table, uint8_t len);
 bool switch_adapter_kj_mode_table_save(uint8_t *kj_mode_table, uint8_t len);
 
-// 按键个数读写
-bool key_num_save(uint8_t key_num);
-bool key_num_read(uint8_t *key_num);
+// 按键状态读写
+bool switch_adapter_key_state_table_read(uint8_t *state_table, uint8_t len);
+bool switch_adapter_key_state_table_save(uint8_t *state_table, uint8_t len);
 
 // 上报模式读写
 bool report_type_save(report *report);

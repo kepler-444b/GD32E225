@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #ifndef _APP_TX_BUFFER_H_
 #define _APP_TX_BUFFER_H_
 #include "lmexxx_conf.h"
@@ -109,4 +109,4 @@ u8 APP_TxBuffer_CanAddNewMsg(void);
 u16 APP_TxBuffer_GetTxTaskNum(void);
 
 #endif
-#endif
+ 

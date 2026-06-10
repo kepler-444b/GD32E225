@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+
 #ifndef __COMMON_H_
 #define __COMMON_H_
 
@@ -46,5 +46,4 @@ typedef void (*buf_free_cb)(void *);
 
 #define WIN32
 
-#endif
 #endif

@@ -18,15 +18,15 @@ typedef struct {
     char data[32];                 // 绑定数据(如果有)
 } BindItem;
 
-#pragma pack(4)
+// #pragma pack(4)
 typedef struct {
     uint8_t se;
     char aei[AEI_MAX_LEN];
     char id[AEI_MAX_LEN];
     char msg[MAX_BIND_MSG_LEN];
-    uint16_t padding;
+    // uint16_t padding;
 } bindDataType;
-#pragma pack()
+// #pragma pack()
 
 #if (MAX_BIND_TABLE_SIZE > 0)
 // static void plcp_panel_event(event_type_e event, void *params);
@@ -36,7 +36,6 @@ static bindDataType gBindDataBase[MAX_BIND_TABLE_SIZE];
 static fmc_state_enum APP_SaveBindParameter(void)
 {
     fmc_state_enum ret;
-
     ret = app_flash_program(FLASH_BIND_INFO_H_START_ADD, (uint32_t *)gBindDataBase, MAX_BIND_TABLE_SIZE * sizeof(bindDataType), true);
     return ret;
 }
@@ -732,13 +731,13 @@ uint16_t PLCP_CountEventInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
     -->
     id -> 2
     ******************************/
+
     uint16_t ret = 0;
     uint16_t error = 0;
 
     if (bindParam == 0 || bindParamLen == 0) {
         return 0;
     }
-
     cJSON *root = cJSON_Parse((char *)bindParam);
     if (root == NULL) {
         printf("Error before: [%s]\n", cJSON_GetErrorPtr());
@@ -753,7 +752,8 @@ uint16_t PLCP_CountEventInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
     }
 
     cJSON *id = cJSON_GetObjectItem(root, "id");
-    if (id != NULL && cJSON_IsArray(id)) {
+
+    if (id != NULL && cJSON_IsArray(id)) { // 是数组
         int array_size = cJSON_GetArraySize(id);
         for (int i = 0; i < array_size; i++) {
             cJSON *item = cJSON_GetArrayItem(id, i);
@@ -764,7 +764,8 @@ uint16_t PLCP_CountEventInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
             }
         }
         ret = array_size;
-    } else {
+    } else { // id 字段不是数组,返回0xFF
+        APP_PRINTF("return 0xFF\n");
         cJSON_Delete(root);
         return 0xff;
     }
@@ -803,6 +804,7 @@ uint8_t PLCP_GetEventInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen, ui
     return 1;
 }
 
+// 删除绑定
 uint8_t PLCP_CountKJInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
 {
     /************************************
@@ -824,7 +826,7 @@ uint8_t PLCP_CountKJInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
 
     cJSON *root = cJSON_Parse((char *)bindParam);
     if (root == NULL) {
-        printf("Error before: [%s]\n", cJSON_GetErrorPtr());
+        printf("Error before2: [%s]\n", cJSON_GetErrorPtr());
         return 0;
     }
 
@@ -857,6 +859,7 @@ uint8_t PLCP_CountKJInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen)
 
 uint8_t PLCP_GetKJInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen, uint8_t index, uint8_t *eventSE, char *eventAEI)
 {
+#if 0
     cJSON *root = cJSON_Parse((char *)bindParam);
     cJSON *kj = cJSON_GetObjectItem(root, "kj");
 
@@ -884,6 +887,59 @@ uint8_t PLCP_GetKJInDelBindParam(uint8_t *bindParam, uint8_t bindParamLen, uint8
     }
 
     return 1;
+#endif
+    if (bindParam == NULL || bindParamLen == 0) {
+        return 0;
+    }
+
+    // char json_buf[256];
+
+    // if (bindParamLen >= sizeof(json_buf)) {
+    //     return 0;
+    // }
+
+    // memcpy(json_buf, bindParam, bindParamLen);
+    // json_buf[bindParamLen] = '\0';
+
+    cJSON *root = cJSON_Parse((char *)bindParam);
+    if (root == NULL) {
+        return 0;
+    }
+
+    cJSON *kj = cJSON_GetObjectItem(root, "kj");
+    if (kj == NULL) {
+        cJSON_Delete(root);
+        return 0;
+    }
+
+    if (cJSON_IsArray(kj)) {
+
+        cJSON *item = cJSON_GetArrayItem(kj, index);
+        if (item == NULL || item->valuestring == NULL) {
+            cJSON_Delete(root);
+            return 0;
+        }
+
+        if (kjToEventSEAndAEI(item->valuestring, eventSE, eventAEI) != 1) {
+            cJSON_Delete(root);
+            return 0;
+        }
+
+    } else {
+
+        if (index != 0 || kj->valuestring == NULL) {
+            cJSON_Delete(root);
+            return 0;
+        }
+
+        if (kjToEventSEAndAEI(kj->valuestring, eventSE, eventAEI) != 1) {
+            cJSON_Delete(root);
+            return 0;
+        }
+    }
+
+    cJSON_Delete(root);
+    return 1;
 }
 
 void PLCP_bindTableDeletByAEI(uint8_t eventSE, char *eventAEI)
@@ -894,7 +950,6 @@ void PLCP_bindTableDeletByAEI(uint8_t eventSE, char *eventAEI)
             gBindDataBase[i].se = 0xff;
         }
     }
-
     APP_SaveBindParameter();
 }
 

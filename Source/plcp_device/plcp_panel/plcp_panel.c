@@ -103,7 +103,6 @@ void plcp_panel_init(void)
     APP_PLCSDK_Init();
     sPost_flag = APP_Postflag_GetPointer();
     CmdTest_MSE_McuVer();
-    // app_flash_mass_erase(); // 擦除整个扇区(测试使用)
 }
 
 static void read_adc_value(void *arg)
@@ -138,14 +137,21 @@ static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, a
             p_status->k_press = true;
             switch_api_button_event_handler(i, 0); // 固定为 按下后松开
 
+#if 0 // 原来的短按3次,再长按5s
+
             if (i == 0) {
                 temp_common->key_short_count++;
                 temp_common->key_short_timerout = 0;
                 APP_PRINTF("key_short_count:%d\n", temp_common->key_short_count);
             }
+#endif
+            temp_common->key_long_press = true;
+
             return;
         }
     }
+
+#if 0 // 原来的短按3次,再长按5s
 
     if (temp_common->key_short_count != 0) {
         temp_common->key_short_timerout++;
@@ -157,11 +163,14 @@ static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, a
             temp_common->key_long_press = true;
         }
     }
+#endif
 
     // 处理长按
     if (temp_common->key_long_press && ++temp_common->key_long_count >= LONG_PRESS) {
         temp_common->key_long_press = false;
-        MCU_Device_Factory();
+        // MCU_Device_Factory();
+        CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER);
+        APP_PRINTF("CmdTest_MSE_Apply_net\n");
     }
 }
 
@@ -228,11 +237,15 @@ static void plcp_panel_tast(void *arg)
             timer_2s_count = 0;
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
-            if (APP_Attribute_GetPointer()->did != 0x0000) {
+            if (APP_Attribute_GetPointer()->did != 0x0000) { // did 为0
                 if (join_net == false) {
                     plcp_panel_blink(false);
                     switch_api_init();
                     join_net = true;
+                }
+            } else {
+                if (join_net == true) {
+                    join_net = false;
                 }
             }
         }

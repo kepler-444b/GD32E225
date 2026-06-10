@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source/cJSON/cJSON.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../base/debug.h"
@@ -648,4 +648,4 @@ void CmdTest_MSE_Load_Widgets(const char *ae_num, uint8_t quantity)
     MCU_Send_date(uartSendBuff, uartSendBuffLen);
     // app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
 }
-#endif
+ 

@@ -6,28 +6,34 @@
 
 #if defined PANEL_6KEY
 #define PANEL_VOL_RANGE_DEF          \
-    [0] = {.vol_range = {0, 5}},     \
-    [1] = {.vol_range = {30, 40}},   \
-    [2] = {.vol_range = {85, 95}},   \
-    [3] = {.vol_range = {145, 166}}, \
-    [4] = {.vol_range = {200, 210}}, \
-    [5] = {.vol_range = {240, 250}}
+    [0] = {.vol_range = {145, 166}}, \
+    [1] = {.vol_range = {200, 210}}, \
+    [2] = {.vol_range = {0, 5}},     \
+    [3] = {.vol_range = {85, 95}},   \
+    [4] = {.vol_range = {240, 250}}, \
+    [5] = {.vol_range = {30, 40}}
 #define RELAY_GPIO_MAP_DEF {PB12, PB13, PB14, PB15} // 继电器 GPIO 映射
 
-#define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB6, PWM_PB7, PWM_PA6, PWM_PA7} // LED 白灯 GPIO
-#define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB4, PB5, PA1, PA4}                        // LED 黄灯 GPIO
+// #define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB6, PWM_PB7, PWM_PA6, PWM_PA7} // LED 白灯 GPIO
+// #define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB4, PB5, PA1, PA4}                        // LED 黄灯 GPIO
+
+#define LED_W_GPIO_MAP_DEF {PWM_PB7, PWM_PA6, PWM_PB0, PWM_PB6, PWM_PA7, PWM_PB1} // LED 白灯 GPIO
+#define LED_Y_GPIO_MAP_DEF {PB5, PA1, PA15, PB4, PA4, PB3}                        // LED 黄灯 GPIO
 
 #elif defined PANEL_4KEY
 
 #ifndef PANEL_TD // 竖向4键面板
-#define PANEL_VOL_RANGE_DEF        \
-    [0] = {.vol_range = {0, 10}},  \
-    [1] = {.vol_range = {25, 40}}, \
-    [2] = {.vol_range = {88, 95}}, \
-    [3] = {.vol_range = {145, 155}}
+#define PANEL_VOL_RANGE_DEF          \
+    [0] = {.vol_range = {145, 155}}, \
+    [1] = {.vol_range = {0, 10}},    \
+    [2] = {.vol_range = {88, 95}},   \
+    [3] = {.vol_range = {25, 40}}
 #define RELAY_GPIO_MAP_DEF {PB12, PB13, PB14, PB15}             // 继电器 GPIO 映射
-#define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB6, PWM_PB7} // LED 白灯 GPIO
-#define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB4, PB5}                // LED 黄灯 GPIO
+#define LED_W_GPIO_MAP_DEF {PWM_PB7, PWM_PB0, PWM_PB6, PWM_PB1} // LED 白灯 GPIO
+#define LED_Y_GPIO_MAP_DEF {PB5, PA15, PB4, PB3}                // LED 黄灯 GPIO
+
+// #define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB6, PWM_PB7} // LED 白灯 GPIO
+// #define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB4, PB5}                // LED 黄灯 GPIO
 
 #endif
 

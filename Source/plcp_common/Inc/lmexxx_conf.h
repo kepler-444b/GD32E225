@@ -1,5 +1,4 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,4 +17,3 @@
 #define LOGINFO4(x, a, b, c, d, e)       printf((a), (b), (c), (d), (e))
 #define LOGINFO5(x, a, b, c, d, e, f)    printf((a), (b), (c), (d), (e), (f))
 #define LOGINFO6(x, a, b, c, d, e, f, g) printf((a), (b), (c), (d), (e), (f), (g))
-#endif

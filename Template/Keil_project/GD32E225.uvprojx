@@ -631,11 +631,6 @@
               <FilePath>..\..\Source\plcp_device\CmdDemo.c</FilePath>
             </File>
             <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Source\plcp_device\main.c</FilePath>
-            </File>
-            <File>
               <FileName>MseProcess.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Source\plcp_device\MseProcess.c</FilePath>
@@ -681,16 +676,6 @@
               <FilePath>..\..\Source\plcp_device\plcp_panel\attr_table.h</FilePath>
             </File>
             <File>
-              <FileName>button_state.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_panel\button_state.c</FilePath>
-            </File>
-            <File>
-              <FileName>button_state.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_panel\button_state.h</FilePath>
-            </File>
-            <File>
               <FileName>panel_adapter.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Source\plcp_device\plcp_panel\panel_adapter.c</FilePath>
@@ -699,16 +684,6 @@
               <FileName>panel_adapter.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\Source\plcp_device\plcp_panel\panel_adapter.h</FilePath>
-            </File>
-            <File>
-              <FileName>plcp_panel_callbacks.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_panel\plcp_panel_callbacks.c</FilePath>
-            </File>
-            <File>
-              <FileName>plcp_panel_callbacks.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_panel\plcp_panel_callbacks.h</FilePath>
             </File>
             <File>
               <FileName>light_ct_adapter.c</FileName>
@@ -989,16 +964,6 @@
               <FileName>PLCP_sdk_api.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\Source\plcp_device\plcp_user_api\PLCP_sdk_api.h</FilePath>
-            </File>
-            <File>
-              <FileName>PLCP_sequentialData.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_user_api\PLCP_sequentialData.c</FilePath>
-            </File>
-            <File>
-              <FileName>PLCP_sequentialData.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\Source\plcp_device\plcp_user_api\PLCP_sequentialData.h</FilePath>
             </File>
             <File>
               <FileName>PLCP_special_scene.c</FileName>

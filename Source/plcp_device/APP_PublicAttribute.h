@@ -15,7 +15,7 @@
  *
  ********************************************************************************/
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #ifndef _APP_PUBLICATTRIBUTE_H_
 #define _APP_PUBLICATTRIBUTE_H_
 #include "MseProcess.h"
@@ -355,4 +355,4 @@ void APP_ReadRecordFlag_Init(void);
 /***********************************函数声明 结束************************************/
 
 #endif
-#endif
+ 

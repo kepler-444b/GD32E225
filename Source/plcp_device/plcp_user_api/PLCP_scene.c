@@ -1,6 +1,6 @@
 
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+
 #include "../../Source/base/base.h"
 #include "../../Source/base/debug.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
@@ -605,6 +605,7 @@ uint16_t APP_Scene_List(uint8_t *buf, const char *aei)
         }
         return index;
     }
+
     if (strncmp(aei, "led_", 4) == 0) {
         uint8_t kj_index = (aei[4] - '0') - 1;
         buf[index++] = led_sceneIndex[kj_index];
@@ -624,81 +625,125 @@ uint16_t APP_Scene_List(uint8_t *buf, const char *aei)
     return 0;
 }
 
-uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei)
+uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei, uint8_t *pl_ptr, uint16_t pl_len)
 {
     APP_PRINTF("APP_Scene_Copy_Get\n");
 
     uint16_t index = 1;
     uint8_t scene_count = 0;
 
-    for (uint8_t j = 0; j < MAX_SCENE_NUMBERS; j++) {
-        uint16_t sceneId = 0;
-        uint8_t ae_count = 0;
+    if (pl_ptr != NULL && pl_len >= 1) {
+        // 有载荷，只恢复指定的场景
+        uint8_t target_scene_num = pl_ptr[0]; // 场景数量
+        for (uint8_t s = 0; s < target_scene_num; s++) {
+            if (1 + s * 2 + 1 >= pl_len)
+                break; // 防越界
 
-        // 先统计AE数量
-        for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
-            if (j < led_sceneIndex[i]) {
-                sceneId = my_led_scene[i].scenes[j].scene_id;
-                if (sceneId != 0)
-                    ae_count++;
+            uint16_t sceneId = pl_ptr[1 + s * 2] | (pl_ptr[1 + s * 2 + 1] << 8);
+            uint8_t ae_count = 0;
+
+            // 统计该场景对应的AE数量
+            for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+                for (uint8_t j = 0; j < led_sceneIndex[i]; j++) {
+                    if (my_led_scene[i].scenes[j].scene_id == sceneId) {
+                        ae_count++;
+                    }
+                }
             }
-        }
-
-        if (ae_count == 0)
-            continue;
-
-        // 写scene_id
-        buf[index++] = sceneId >> 8;
-        buf[index++] = sceneId & 0xFF;
-
-        // 写AE数量
-        buf[index++] = ae_count;
-
-        // 写AE数据
-        for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
-            if (j >= led_sceneIndex[i]) {
+            if (ae_count == 0)
                 continue;
+
+            // 写scene_id
+            buf[index++] = sceneId & 0xFF;
+            buf[index++] = sceneId >> 8;
+
+            // 写AE数量
+            buf[index++] = ae_count;
+
+            // 写AE数据
+            for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+                for (uint8_t j = 0; j < led_sceneIndex[i]; j++) {
+                    single_led_scene *sc = &my_led_scene[i].scenes[j];
+                    if (sc->scene_id != sceneId)
+                        continue;
+
+                    buf[index++] = 'l';
+                    buf[index++] = 'e';
+                    buf[index++] = 'd';
+                    buf[index++] = '_';
+                    buf[index++] = '1' + i;
+                    buf[index++] = 0x00;
+
+                    uint8_t scene_type = ((sc->close_scene[0] != 0xFF) && (sc->close_scene[1] != 0xFF)) ? 0x03 : 0x01;
+                    buf[index++] = scene_type;
+
+                    // 开场景
+                    buf[index++] = sc->open_scene[0];
+                    buf[index++] = sc->open_scene[1];
+
+                    // 关场景
+                    if (scene_type == 0x03) {
+                        buf[index++] = sc->close_scene[0];
+                        buf[index++] = sc->close_scene[1];
+                    }
+                }
             }
 
-            single_led_scene *sc = &my_led_scene[i].scenes[j];
-
-            if (sc->scene_id != sceneId) {
-                continue;
-            }
-
-            buf[index++] = 'l';
-            buf[index++] = 'e';
-            buf[index++] = 'd';
-            buf[index++] = '_';
-            buf[index++] = '1' + i;
-            buf[index++] = 0x00;
-
-            uint8_t scene_type;
-
-            if ((sc->close_scene[0] != 0xFF) && (sc->close_scene[1] != 0xFF)) {
-                scene_type = 0x03;
-            } else {
-                scene_type = 0x01;
-            }
-
-            buf[index++] = scene_type;
-
-            // 开场景
-            buf[index++] = sc->open_scene[0];
-            buf[index++] = sc->open_scene[1];
-
-            // 如果有关场景
-            if (scene_type == 0x03) {
-                buf[index++] = sc->close_scene[0];
-                buf[index++] = sc->close_scene[1];
-            }
+            scene_count++;
         }
+    } else {
+        // 无载荷，返回全部场景
+        for (uint8_t j = 0; j < MAX_SCENE_NUMBERS; j++) {
+            uint16_t sceneId = 0;
+            uint8_t ae_count = 0;
 
-        scene_count++;
+            // 先统计AE数量
+            for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+                if (j < led_sceneIndex[i]) {
+                    sceneId = my_led_scene[i].scenes[j].scene_id;
+                    if (sceneId != 0)
+                        ae_count++;
+                }
+            }
+
+            if (ae_count == 0)
+                continue;
+
+            buf[index++] = sceneId & 0xFF;
+            buf[index++] = sceneId >> 8;
+            buf[index++] = ae_count;
+
+            for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+                if (j >= led_sceneIndex[i])
+                    continue;
+
+                single_led_scene *sc = &my_led_scene[i].scenes[j];
+                if (sc->scene_id != sceneId)
+                    continue;
+
+                buf[index++] = 'l';
+                buf[index++] = 'e';
+                buf[index++] = 'd';
+                buf[index++] = '_';
+                buf[index++] = '1' + i;
+                buf[index++] = 0x00;
+
+                uint8_t scene_type = ((sc->close_scene[0] != 0xFF) && (sc->close_scene[1] != 0xFF)) ? 0x03 : 0x01;
+                buf[index++] = scene_type;
+                buf[index++] = sc->open_scene[0];
+                buf[index++] = sc->open_scene[1];
+
+                if (scene_type == 0x03) {
+                    buf[index++] = sc->close_scene[0];
+                    buf[index++] = sc->close_scene[1];
+                }
+            }
+
+            scene_count++;
+        }
     }
 
     buf[0] = scene_count;
-
     return index;
 }
 
@@ -818,6 +863,14 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
             }
         }
     }
+
+    if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
+        if (sceneId == night_scene_info_get()->open_night) {
+            night_scene_open();
+        }
+        respondCode = UAPPS_ACK_CHANGED;
+    }
+
     if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {
         APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
     }
@@ -1207,5 +1260,3 @@ void APP_Curtain_timer(void)
 {
     app_timer_start(100, timer_curtain_exe, true, NULL, "curtain_hold");
 }
-
-#endif

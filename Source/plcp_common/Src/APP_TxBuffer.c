@@ -16,7 +16,7 @@
  ********************************************************************************/
 // #include "lmexxx_conf.h"
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source/base/base.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 /*******************************************************************************/
@@ -322,4 +322,4 @@ u16 APP_TxBuffer_GetTxTaskNum(void)
         return APP_TX_BUFFER_DATA_PARAM_ARRAY_SIZE - APP_TxBufferHead + APP_TxBufferTail;
 #endif
 }
-#endif
+ 

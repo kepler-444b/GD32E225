@@ -433,7 +433,7 @@ void APP_STATE_SCENE_COPY(UappsMessage *uappsMsg, const char *aei)
 
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) { // GET
         respondCode = UAPPS_ACK_CONTENT;
-        ackLen = APP_Scene_Copy_Get(ackBuf, aei); // 将场景参数添加到载荷中进行回复
+        ackLen = APP_Scene_Copy_Get(ackBuf, aei, uappsMsg->pl_ptr, uappsMsg->pl_len); // 将场景参数添加到载荷中进行回复
         payloadFlag = 1;
         scratch.p = ackBuf;
         if (ackLen != 0) {
@@ -462,13 +462,14 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
     char eventAEI[AEI_MAX_LEN];
     char eventID[AEI_MAX_LEN];
     char msg[MAX_BIND_MSG_LEN];
-    uint8_t ackBuf[400];
+    uint8_t ackBuf[250];
 
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint16_t payloadFlag = 0;
     uint8_t count = 0;
 
-    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) { // 写入绑定信息
+    // 写入绑定信息
+    if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
         count = PLCP_CountBindDataInAddBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
         APP_PRINTF("count:%d\n", count);
 
@@ -483,9 +484,11 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
                 }
             }
         }
-    } else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_DELETE) { // 删除指定事件的绑定信息
-        count = PLCP_CountEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
 
+    }
+    // 删除绑定
+    else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_DELETE) {
+        count = PLCP_CountEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
         if (count > 0 && count != 0xff) {
             for (i = 0; i < count; i++) {
                 if (1 == PLCP_GetEventInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len, i, &eventSE, eventAEI, eventID)) {
@@ -497,17 +500,21 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
             }
         } else if (count == 0xff) { // 删除多个绑定信息
             count = PLCP_CountKJInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
+            APP_PRINTF("count:%d\n", count);
             if (count > 0) {
                 for (i = 0; i < count; i++) {
-                    if (1 == PLCP_GetKJInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len,
-                                                      i, &eventSE, eventAEI)) {
+                    if (1 == PLCP_GetKJInDelBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len, i, &eventSE, eventAEI)) {
+
                         PLCP_bindTableDeletByAEI(eventSE, eventAEI);
                         respondCode = UAPPS_ACK_CHANGED;
                     }
                 }
             }
         }
-    } else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) { // 查询绑定信息
+    }
+
+    // 查询绑定
+    else if (uappsMsg->hdr.hdrCode == UAPPS_REQ_GET) {
         scratch->len = PLCP_GetBindData(uappsMsg->pl_ptr, uappsMsg->pl_len, ackBuf);
         if (scratch->len != 0) {
             scratch->p = ackBuf;
@@ -528,8 +535,8 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
     uint8_t index = 0;
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uapps_rw_buffer_t scratch;
-
     memset(&scratch, 0, sizeof(uapps_rw_buffer_t));
+
     const sPublic_attribute *pAttributeOfAPP = APP_Attribute_GetPointer();
 
     for (i = 0; i < MSE_SERVICE_NUM; i++) {

@@ -15,7 +15,7 @@
  *
  ********************************************************************************/
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source./plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/base/base.h"
 #include "../../Source/base/debug.h"
@@ -155,17 +155,16 @@ void APP_PLCSDK_Init(void)
     APP_RxBuffer_init();
     // APP_GroupClr();
     // APP_SceneClr();
+    /*
+        APP_ReadBindParameter(); // 读取绑定信息
 
-    APP_ReadBindParameter(); // 读取绑定信息
-    // APP_Bindinit();          // Bind 订阅事件总线
-    // APP_SceneInit();
+        APP_ReadDelaySceneParameter(); // 读取延时场景信息
+        APP_ReadNightSceneParameter(); // 读取夜灯场景信息
 
-    APP_ReadDelaySceneParameter(); // 读取延时场景信息
-    APP_ReadNightSceneParameter(); // 读取夜灯场景信息
-
+        APP_ReadRecordFlag_Init(); // 初始化入网标志位
+        APP_ReadAllSceneInfo();    // 读取所有场景信息
+        APP_ReadAllGroupInfo();    // 读取所有群组信息 */
     APP_ReadRecordFlag_Init(); // 初始化入网标志位
-    APP_ReadAllSceneInfo();    // 读取所有场景信息
-    APP_ReadAllGroupInfo();    // 读取所有群组信息
 
 #if defined PLCP_LIGHT_CT
     APP_Read_light_ct_info();
@@ -573,6 +572,7 @@ void MCU_Device_Factory(void)
     PLCP_bindTableClr();        // 清空绑定信息
     APP_SpecialSceneClr();      // 清空特殊场景
     attr_kj_mode_table_reset(); // 按键类型恢复默认
+    attr_key_state_table_reset();
 
     NVIC_SystemReset();
 }
@@ -843,4 +843,4 @@ void APP_Queue_ListenAndHandleMessage(void)
         app_usart_tx_buf(txTask.nsdu, txTask.nsduLength, USART0);
     }
 }
-#endif
+ 

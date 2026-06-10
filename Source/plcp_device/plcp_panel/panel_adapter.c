@@ -233,34 +233,34 @@ bool switch_adapter_kj_mode_table_save(uint8_t *kj_mode_table, uint8_t len)
     return true;
 }
 
-// 写入key个数
-bool key_num_save(uint8_t key_num)
+// 读取按键状态
+bool switch_adapter_key_state_table_read(uint8_t *state_table, uint8_t len)
 {
     fmc_state_enum ret;
-    uint32_t key_number = key_num;
-    ret = app_flash_program(FLASH_PANEL_KYE_NUM, (uint32_t *)&key_number, sizeof(key_number), true);
-    if (ret != FMC_READY) {
-        return false;
-    }
-    return true;
-}
-
-// 读取key个数
-bool key_num_read(uint8_t *key_num)
-{
-    fmc_state_enum ret;
-    uint32_t key_number = 0;
-
-    ret = app_flash_read(FLASH_PANEL_KYE_NUM, (uint32_t *)&key_number, sizeof(key_number));
+    ret = app_flash_read(FLASH_PANEL_KYE_STATE, (uint32_t *)state_table, len);
     if (ret != FMC_READY) {
         APP_PRINTF("switch_adapter_kj_mode_table_read error\n");
         return false;
     }
-    if (key_number == 0xFFFFFFFF) {
-
-        key_number = 0x06; // 使用默认值
+    for (uint8_t i = 0; i < len; i++) {
+        if (state_table[i] == 0xFF) {
+            if (i < KEY_NUMBER) {
+                state_table[i] = 0x00; // 默认设置为"关闭"
+            }
+        }
     }
-    *key_num = (uint8_t)key_number;
+    return true;
+}
+
+// 写入按键状态
+bool switch_adapter_key_state_table_save(uint8_t *state_table, uint8_t len)
+{
+    fmc_state_enum ret;
+    // APP_PRINTF_BUF("state_table", state_table, sizeof(state_table));
+    ret = app_flash_program(FLASH_PANEL_KYE_STATE, (uint32_t *)state_table, len, true);
+    if (ret != FMC_READY) {
+        return false;
+    }
     return true;
 }
 

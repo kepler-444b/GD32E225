@@ -362,6 +362,19 @@ uint8_t attr_kj_mode_table_get(uint8_t index)
 
 /* ****************************************************************************************************** */
 // 按键状态
+void attr_key_state_table_reset(void)
+{
+    memset(key_status_table, button_state_default_val, sizeof(key_status_table));
+
+    for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+        if (key_status_table[i] == 0xFF) {
+            if (i < KEY_NUMBER) {
+                key_status_table[i] = 0x00;
+            }
+        }
+    }
+    switch_adapter_key_state_table_save(key_status_table, sizeof(key_status_table));
+}
 uint8_t attr_key_state_table_get(uint8_t id)
 {
     return key_status_table[id];
@@ -378,14 +391,22 @@ uint8_t attr_key_state_table_set(uint8_t index, uint8_t on_off)
 
     switch_led_ctrl(index, on_off);                // 控制 LED
     switch_led_b_ctrl(index, on_off ? 0 : 100, 1); // 控制背光灯,原逻辑:按键打开背光 0,关闭 100
+
+    switch_adapter_key_state_table_save(key_status_table, sizeof(key_status_table));
     return 1;
 }
 
 // 恢复按键状态
 void attr_key_state_table_recover(void)
 {
+    if (switch_adapter_key_state_table_read(key_status_table, sizeof(key_status_table)) == false) { // 读取按键状态
+        APP_ERROR("attr_kj_mode_table_reset");
+    } else {
+        APP_PRINTF_BUF("state_table", key_status_table, sizeof(key_status_table));
+        APP_PRINTF("\n");
+    }
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-        attr_key_state_table_set(i, 0);
+        attr_key_state_table_set(i, key_status_table[i]);
     }
 }
 

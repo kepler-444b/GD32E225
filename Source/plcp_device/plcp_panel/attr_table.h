@@ -49,6 +49,7 @@ uint8_t attr_kj_mode_table_set(uint8_t index, uint8_t state);
 uint8_t attr_kj_mode_table_get(uint8_t index);
 
 // 按键状态
+void attr_key_state_table_reset(void);
 uint8_t attr_key_state_table_set(uint8_t id, uint8_t on_off);
 uint8_t attr_key_state_table_get(uint8_t id);
 void attr_key_state_table_recover(void);

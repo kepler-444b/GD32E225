@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source/base/debug.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../Source/flash/flash.h"
@@ -218,4 +218,4 @@ void APP_ReadRecordFlag_Init(void)
     // APP_PRINTF("wWidgetsecflag:%d\n", sPost_flag.wWidgetsecflag);
     // APP_PRINTF("wtranferflag:%d\n", sPost_flag.wtranferflag);
 }
-#endif
+ 

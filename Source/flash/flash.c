@@ -133,31 +133,89 @@ fmc_state_enum app_flash_program(uint32_t address, uint32_t *data, uint32_t leng
     }
     return app_flash_write_word(address, data, length); // 执行数据写入
 #else
-    fmc_state_enum state = FMC_READY;
+    // fmc_state_enum state = FMC_READY;
 
-    if ((address % 4) || (length % 4) || !data) {
+    // if ((address % 4) || (length % 4) || !data) {
+    //     return FMC_PGAERR;
+    // }
+
+    // if (erase_first) {
+    //     uint32_t page_address = address & ~(FLASH_PAGE_SIZE - 1);
+    //     fmc_unlock();
+    //     fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_WPERR | FMC_FLAG_PGERR);
+    //     state = fmc_page_erase(page_address);
+    //     fmc_lock();
+    //     if (state != FMC_READY)
+    //         return state;
+    // }
+
+    // fmc_unlock();
+    // uint32_t word_len = length / 4;
+    // for (uint32_t i = 0; i < word_len; i++) {
+    //     state = fmc_word_program(address + i * 4, data[i]);
+    //     if (state != FMC_READY)
+    //         break;
+    // }
+    // fmc_lock();
+
+    // return state;
+    if ((address % 4) || (length % 4) || (data == NULL)) {
         return FMC_PGAERR;
     }
 
-    if (erase_first) {
-        uint32_t page_address = address & ~(FLASH_PAGE_SIZE - 1);
-        fmc_unlock();
-        fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_WPERR | FMC_FLAG_PGERR);
-        state = fmc_page_erase(page_address);
-        fmc_lock();
-        if (state != FMC_READY)
-            return state;
-    }
+    fmc_state_enum state = FMC_READY;
+
+    uint32_t start_page = address & ~(FLASH_PAGE_SIZE - 1);
+    uint32_t end_addr = address + length;
+    uint32_t end_page = end_addr & ~(FLASH_PAGE_SIZE - 1);
 
     fmc_unlock();
-    uint32_t word_len = length / 4;
-    for (uint32_t i = 0; i < word_len; i++) {
-        state = fmc_word_program(address + i * 4, data[i]);
-        if (state != FMC_READY)
-            break;
+
+    /* ===== 1. 清标志 ===== */
+    fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_WPERR | FMC_FLAG_PGERR);
+
+    /* ===== 2. 等待Flash空闲 ===== */
+    while (fmc_flag_get(FMC_FLAG_BUSY))
+        ;
+
+    /* ===== 3. 擦除（支持跨页） ===== */
+    if (erase_first) {
+
+        for (uint32_t page = start_page; page <= end_page; page += FLASH_PAGE_SIZE) {
+            while (fmc_flag_get(FMC_FLAG_BUSY))
+                ;
+
+            fmc_flag_clear(FMC_FLAG_END | FMC_FLAG_WPERR | FMC_FLAG_PGERR);
+
+            state = fmc_page_erase(page);
+
+            if (state != FMC_READY) {
+                fmc_lock();
+                return state;
+            }
+        }
     }
+
+    /* ===== 4. 写入 ===== */
+    uint32_t word_len = length / 4;
+
+    for (uint32_t i = 0; i < word_len; i++) {
+        while (fmc_flag_get(FMC_FLAG_BUSY))
+            ;
+
+        state = fmc_word_program(address + i * 4, data[i]);
+
+        if (state != FMC_READY) {
+            fmc_lock();
+            return state;
+        }
+    }
+
+    /* ===== 5. 收尾 ===== */
+    while (fmc_flag_get(FMC_FLAG_BUSY))
+        ;
     fmc_lock();
 
-    return state;
+    return FMC_READY;
 #endif
 }

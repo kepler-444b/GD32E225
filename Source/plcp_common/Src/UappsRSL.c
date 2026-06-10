@@ -15,7 +15,7 @@
  *
  ********************************************************************************/
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+ 
 #include "../../Source/base/debug.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 // #include "lmexxx_conf.h"
@@ -404,7 +404,7 @@ UappsError RslFromOpt(RSL_t *gRsl, UappsOption *opt)
 
     return RslFromBytes(gRsl, opt->opt_val, opt->opt_len);
 }
-#endif
+ 
 /***************************************************************************************/
 
 /***********************************函数声明 结束***********************************/

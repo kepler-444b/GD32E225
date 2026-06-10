@@ -31,7 +31,15 @@ void switch_api_init(void)
 
     attr_led_state_table_recover(); // 读取LED控制状态
     attr_kj_mode_table_recover();   // 读取按键模式
-    attr_key_state_table_recover();
+
+    APP_ReadBindParameter(); // 读取绑定信息
+
+    // attr_key_state_table_recover(); // 恢复按键状态
+    APP_ReadDelaySceneParameter(); // 读取延时场景信息
+    APP_ReadNightSceneParameter(); // 读取夜灯场景信息
+
+    APP_ReadAllSceneInfo(); // 读取所有场景信息
+    APP_ReadAllGroupInfo(); // 读取所有群组信息
 }
 
 void switch_api_button_event_handler(uint8_t id, uint8_t event) // 0:release 1:press

@@ -13,7 +13,7 @@
  * modify record:
  *****************************************************************************/
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+
 #ifndef _SCENE_DEMO_H_
 #define _SCENE_DEMO_H_
 
@@ -168,7 +168,7 @@ uint8_t APP_Scene_Join(uint8_t *buf, uint16_t len, const char *aei);
 uint8_t APP_Scene_Quit(uint8_t *buf, uint16_t len, const char *aei);
 uint8_t APP_Scene_Dele(uint8_t *buf, uint16_t len, const char *aei);
 uint16_t APP_Scene_List(uint8_t *buf, const char *aei);
-uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei);
+uint16_t APP_Scene_Copy_Get(uint8_t *buf, const char *aei, uint8_t *pl_ptr, uint16_t pl_len);
 uint16_t APP_Scene_Copy_Put(uint8_t *buf, uint16_t len);
 
 void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei);
@@ -197,5 +197,4 @@ void APP_Curtain_timer(void);
 const curtain_t *APP_GetCurtain(uint8_t index);
 
 /***********************************函数声明 结束************************************/
-#endif
 #endif

@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
-#if defined PLCP_DEVICE
+
 #ifndef _APP_RX_BUFFER_H_
 #define _APP_RX_BUFFER_H_
 
@@ -71,5 +71,4 @@ u8 APP_RxBuffer_GetFirstMsgDataParameters(RxDataParametersStruct *firstMsgDataPa
 ---------------------------------------------------------------*/
 u16 APP_RxBuffer_getRxBufferMsgAmount(void);
 
-#endif
 #endif

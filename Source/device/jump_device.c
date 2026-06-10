@@ -1,4 +1,3 @@
-#include "jump_device.h"
 #include "../Source/plcp_device/plcp_linght_ct/plcp_light_ct.h"
 #include "../Source/plcp_device/plcp_panel/plcp_panel.h"
 #include "device_manager.h"
