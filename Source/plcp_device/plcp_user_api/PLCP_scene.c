@@ -239,8 +239,12 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         }
 #if 1
         APP_PRINTF("DeviceScene[%d].sceneId[%04X] ", i, DeviceScene[i].sceneId);
-        APP_PRINTF_BUF(".open", DeviceScene[i].scenePower, DeviceScene[i].scenePower[0] + 1);
-        APP_PRINTF_BUF(".close", DeviceScene[i].quitscenePower, DeviceScene[i].quitscenePower[0] + 1);
+        if ((DeviceScene[i].scenePower[0]) != 0xFF) {
+            APP_PRINTF_BUF(".open", DeviceScene[i].scenePower, DeviceScene[i].scenePower[0] + 1);
+        }
+        if ((DeviceScene[i].quitscenePower[0]) != 0xFF) {
+            APP_PRINTF_BUF(".close", DeviceScene[i].quitscenePower, DeviceScene[i].quitscenePower[0] + 1);
+        }
         APP_PRINTF("\n");
 #endif
     }
@@ -376,10 +380,10 @@ uint8_t APP_SetScene(single_scene_data *temp)
     }
 
     // 打印日志
-    // APP_PRINTF("%s[%d].scenes[%d].scene_id:%04X\n", log_prefix, temp->kj_index, temp->index, temp->scene_id);
-    // APP_PRINTF_BUF(".open_scene", open_dst, temp->open_scene_len);
-    // if (close_dst)
-    //     APP_PRINTF_BUF(".close_scene", close_dst, temp->close_scene_len);
+    APP_PRINTF("%s[%d].scenes[%d].scene_id:%04X\n", log_prefix, temp->kj_index, temp->index, temp->scene_id);
+    APP_PRINTF_BUF(".open_scene", open_dst, temp->open_scene_len);
+    if (close_dst)
+        APP_PRINTF_BUF(".close_scene", close_dst, temp->close_scene_len);
 
     // 保存参数
     switch (temp->scene_type) {
@@ -436,6 +440,10 @@ uint8_t APP_Scene_Join(uint8_t *buf, uint16_t len, const char *aei)
     temp.open_scene_len = open_len + 1;
     temp.close_scene = close_data;
     temp.close_scene_len = close_len + 1;
+
+    APP_PRINTF("temp.scene_id:%d\n", temp.scene_id);
+    APP_PRINTF_BUF("temp.open_scene", temp.open_scene, temp.open_scene_len);
+    APP_PRINTF_BUF("temp.close_data", temp.close_scene, temp.close_scene_len);
 
     uint8_t i = 0;
     uint8_t kj_index = 0;
@@ -1166,7 +1174,6 @@ void APP_Device_GroupOpen(UappsMessage *uappsMsg, RSL_t *rsl) // 执行窗帘开
             uint8_t index = aei_list[i][1] - '1';
             if (attr_kj_mode_table_get(index) == CURTAIN_e) {
                 my_curtain[index].is_exe = true;
-                // APP_PRINTF("_open %d\n", index);
             }
         }
     }
@@ -1230,21 +1237,30 @@ void APP_Device_GroupStop(UappsMessage *uappsMsg, RSL_t *rsl)
 void timer_curtain_exe(void *arg)
 {
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-        if (my_curtain[i].is_exe) { // 窗帘开或窗帘关
-            my_curtain[i].count++;
-            APP_SET_GPIO(get_panel_pins()->led_y_pin[i], true);
-            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 0);
-        }
-        if (my_curtain[i].is_exe == false) {
-            APP_SET_GPIO(get_panel_pins()->led_y_pin[i], false);
-            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 1000);
-        }
-        if (my_curtain[i].count >= 50) {
-            my_curtain[i].is_exe = false;
+
+        // 外部刚刚把 is_exe 从 true 变成了 false
+        if (my_curtain[i].is_exe == false && my_curtain[i].last_exe == true) {
             my_curtain[i].count = 0;
             APP_SET_GPIO(get_panel_pins()->led_y_pin[i], false);
-            pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], 1000);
+            app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[i], 1000, 100);
         }
+
+        // 窗帘正在运行
+        else if (my_curtain[i].is_exe) {
+            my_curtain[i].count++;
+            if (my_curtain[i].count == 1) {
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[i], true);
+                app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[i], 0, 100);
+            }
+
+            if (my_curtain[i].count >= 50) { // 正常运行到 50 个 tick 结束
+                my_curtain[i].is_exe = false;
+                my_curtain[i].count = 0;
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[i], false);
+                app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[i], 1000, 100);
+            }
+        }
+        my_curtain[i].last_exe = my_curtain[i].is_exe;
     }
 }
 

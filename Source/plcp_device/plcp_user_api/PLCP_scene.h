@@ -190,7 +190,7 @@ bool APP_ReadAllGroupInfo(void);
 
 typedef struct {
     uint8_t is_exe;
-
+    uint8_t last_exe;
     uint16_t count;
 } curtain_t;
 void APP_Curtain_timer(void);

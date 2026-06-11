@@ -97,8 +97,7 @@ void switch_api_button_event_handler(uint8_t id, uint8_t event) // 0:release 1:p
             APP_PRINTF("SWITCH_e\n");
 
             keyState = !attr_key_state_table_get(id);
-            attr_key_state_table_set(id, keyState);
-
+            attr_key_state_table_set(id, keyState); 
             if (keyState) {
                 attr_led_b_table_set(id, 0);
                 attr_led_table_set(id, 1);

@@ -1,11 +1,11 @@
 #include "plcp_light_ct.h"
-#include <stdio.h>
-#include "../../Source/pwm/pwm_hw.h"
 #include "../../Source/device/device_manager.h"
-#include "../../Source/timer/timer.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
-#include "../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.h"
 #include "../../Source/plcp_device/plcp_linght_ct/light_ct_attr_table.h"
+#include "../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.h"
+#include "../../Source/pwm/pwm_hw.h"
+#include "../../Source/timer/timer.h"
+#include <stdio.h>
 #if defined PLCP_LIGHT_CT
 
 // 向前声明
@@ -25,15 +25,17 @@ static volatile uint16_t timer_1s_count;
 static uint16_t timer_2s_count;
 static volatile uint16_t timer_3s_count;
 
-static bool get_cco_mac         = false;
-static bool get_my_mac          = false;
-static bool join_net            = false;
-static bool led_blink           = false;
+static bool get_cco_mac = false;
+static bool get_my_mac = false;
+static bool join_net = false;
+static bool led_blink = false;
 static uint16_t led_blink_count = 0;
 
 const sPost_wflash *sPost_flag = NULL;
+
 void plcp_light_ct_init(void)
 {
+    APP_PRINTF("plcp_light_ct_init\n");
     plcp_light_ct_pins_init();
     app_pwm_hw_init();
     app_pwm_hw_add_pin(PWM_PB0);
@@ -42,6 +44,7 @@ void plcp_light_ct_init(void)
     app_timer_start(10, plcp_panel_tast, true, NULL, "task");
     app_timer_start(50, process_message_queue, true, NULL, "message_queue");
     // app_flash_mass_erase();
+    
     APP_PLCSDK_Init();
     attr_light_ct_table_set(true);
     sPost_flag = APP_Postflag_GetPointer();
@@ -108,8 +111,14 @@ static void plcp_panel_tast(void *arg)
             timer_2s_count = 0;
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
-            if (APP_Attribute_GetPointer()->did != 0x0000) { 
-                join_net = true; // 入网标识
+            if (APP_Attribute_GetPointer()->did != 0x0000) {
+                if (join_net == false) { // 由为入网变为入网
+                    join_net = true;     // 入网标识
+                }
+            } else {
+                if (join_net == true) { // 由入网变为为入网
+                    join_net = false;
+                }
             }
         }
     }
@@ -117,7 +126,7 @@ static void plcp_panel_tast(void *arg)
         led_blink_count++;
         if (led_blink_count >= 600) {
             led_blink_count = 0;
-            led_blink       = !led_blink;
+            led_blink = !led_blink;
             if (led_blink) {
                 app_set_pwm_hw_fade(PWM_PB0, 1000, 5000); // 暖白 PB0
                 app_set_pwm_hw_fade(PWM_PB1, 1000, 5000); // 白光 PB1

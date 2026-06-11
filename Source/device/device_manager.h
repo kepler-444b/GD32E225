@@ -6,7 +6,7 @@
 // #define PLCP_LIGHT_CT // 灯驱
 
 #if defined PLCP_PANEL
-#define DEV_TYPE   0x00 // 产品类型(面板)
+#define DEV_TYPE 0x00 // 产品类型(面板)
 
 #define PANEL_TD   // 横向面板
 #define PANEL_4KEY // 4键面板
@@ -18,10 +18,13 @@
 #define KEY_NUMBER 6
 #endif
 #define RELAY_NUMBER 4
-#endif
 
 #elif defined PLCP_LIGHT_CT
 
+#define ONE_CHJANNEL
+
+#define KEY_NUMBER 0
 #else
-#define KEY_NUMBER 4
+
+#endif
 #endif

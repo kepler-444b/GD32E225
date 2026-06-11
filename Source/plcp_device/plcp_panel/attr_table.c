@@ -127,6 +127,9 @@ uint8_t attr_led_table_set(uint8_t index, uint8_t onoff)
     }
     led_status_table[index] = onoff;
     attr_led_table_save(); // 保存led状态
+
+    key_status_table[index] = onoff; // 设置按键状态
+    switch_adapter_key_state_table_save(key_status_table, sizeof(key_status_table));
     switch_led_ctrl(index, onoff);
     return 1;
 }
@@ -402,7 +405,7 @@ void attr_key_state_table_recover(void)
     if (switch_adapter_key_state_table_read(key_status_table, sizeof(key_status_table)) == false) { // 读取按键状态
         APP_ERROR("attr_kj_mode_table_reset");
     } else {
-        APP_PRINTF_BUF("state_table", key_status_table, sizeof(key_status_table));
+        // APP_PRINTF_BUF("state_table", key_status_table, sizeof(key_status_table));
         APP_PRINTF("\n");
     }
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
@@ -437,6 +440,7 @@ void switch_status_by_bits(const uint8_t *data, uint8_t data_len)
     uint8_t cmd_type = data[0]; // 控制 type
     uint16_t ctrl_bits;         // 控制字
 
+    APP_PRINTF_BUF("data", data, data_len);
     ctrl_bits = ((uint16_t)data[1] << 8) | data[2];
     uint8_t idx = 0;
 
@@ -450,9 +454,11 @@ void switch_status_by_bits(const uint8_t *data, uint8_t data_len)
         switch (cmd_type) {
         case BUTTON_TYPE:
             attr_key_state_table_set(i, status);
+            APP_PRINTF("button idx:%d status :%d\n", i, status);
             break;
         case REALY_TYPE:
             attr_relay_table_set(i, status);
+            APP_PRINTF("relay idx:%d status :%d\n", i, status);
             break;
         case BLCK_TYPE:
             if (i < 8) { // 前8个bit是背光灯
@@ -473,14 +479,15 @@ void switch_status_by_bits(const uint8_t *data, uint8_t data_len)
 // 默认场景执行
 void parse_control_commands(const uint8_t *buf, uint8_t buf_len)
 {
-    uint8_t buf_length = buf[0]; // 第一个字节就是数据包长度
-    uint8_t pos = 1;             // 从第二个字节开始解析命令
+    uint8_t buf_length = buf[0]; // 第一个字节是数据包长度
+
+    uint8_t pos = 1; // 从第二个字节开始解析命令
 
     while (pos < buf_length + 1) { // 注意：pos要小于 buf_length + 1
         uint8_t start_pos = pos;
 
-        uint16_t control_mask = (buf[pos + 1] << 8) | buf[pos];
-        pos += 2;
+        uint16_t control_mask = (buf[pos + 2] << 8) | buf[pos + 1];
+        pos += 3;
 
         // 计算被控个数(统计1的个数)
         uint8_t control_count = COUNT_ONES_16(control_mask);

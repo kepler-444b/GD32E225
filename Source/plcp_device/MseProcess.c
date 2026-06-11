@@ -93,6 +93,7 @@ void APP_SendACK(UappsMessage *reqMsg, uint16_t payloadFlag, uapps_rw_buffer_t *
 
 void APP_STATE_ON_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch, RSL_t *rsl)
 {
+    APP_PRINTF("APP_STATE_ON_Processing\n");
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint8_t payloadFlag = 0;
 

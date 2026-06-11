@@ -27,6 +27,7 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg);
 返回值：  	null - 失败
 备 注：
 ---------------------------------------------------------------*/
+
 typedef char aei_t[KEY_NUMBER];
 uint8_t PLCP_BindTableRead_aei(const char *group_num, const char *cmd, aei_t out_aei[], uint8_t max_num);
 char *PLCP_bindTableRead(uint8_t se, char *aei, char *id);

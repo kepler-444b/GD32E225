@@ -237,15 +237,15 @@ static void plcp_panel_tast(void *arg)
             timer_2s_count = 0;
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
-            if (APP_Attribute_GetPointer()->did != 0x0000) { // did 为0
-                if (join_net == false) {
-                    plcp_panel_blink(false);
+            if (APP_Attribute_GetPointer()->did != 0x0000) {
+                if (join_net == false) {     // 由为入网变为入网
+                    plcp_panel_blink(false); // 关闭所有指示灯
                     switch_api_init();
                     join_net = true;
                 }
             } else {
-                if (join_net == true) {
-                    join_net = false;
+                if (join_net == true) { // 有入网变为为入网
+                    join_net = false;   // 指示灯闪烁
                 }
             }
         }

@@ -21,8 +21,7 @@ uint8_t attr_light_ct_table_set(uint8_t onoff)
 
 void light_ct_ctrl(uint8_t *buf, uint8_t len)
 {
-    APP_PRINTF_BUF("light_ct_ctrl buf", buf, len);
-
+    APP_PRINTF_BUF("buf", buf, len);
     uint8_t cmd_type = buf[0];
     if (cmd_type != 1)
         return; // 只解析状态控制命令
@@ -38,16 +37,17 @@ void light_ct_ctrl(uint8_t *buf, uint8_t len)
     bool Ti_flag = BIT4(ctrl_word);            // 定时 Ti
     bool brightness_type;                      // 百分比亮度
 
-    uint8_t *p = buf + 3;
+    // 指向参数区
+    uint8_t *p = buf + 3; // 指向数据
     uint8_t remain = len - 3;
 
-    // 渐变时间
+    // P 渐变时间 P=0 不渐变  P=1 使用默认渐变时间 P=2 后面跟1字节渐变时间(单位100ms) P=3 随机跳变
     uint8_t grad_time = 0;
     if (P_flag == 2 && remain >= 1) {
         grad_time = *p++; // 单字节，单位100ms
         remain--;
     }
-    // 亮度
+    // L 亮度 百分比格式(bit7=1 1字节 范围0~100),绝对值格式(bit7=0 2字节(MSB First) 范围0~10000)
     uint16_t brightness = 0;
     if (L_flag) {
         if (remain < 1)
@@ -66,7 +66,7 @@ void light_ct_ctrl(uint8_t *buf, uint8_t len)
             remain -= 2;
         }
     }
-    // 色温
+    // T 色温 bit7=1 -> 百分比 bit7=0 -> 绝对值 绝对值范围: 2700K~6500K
     uint16_t color_temp = 0;
     if (T_flag) {
         if (remain < 2)
@@ -100,8 +100,8 @@ void light_ct_ctrl(uint8_t *buf, uint8_t len)
         remain--;
     }
     // 调试打印
-    APP_PRINTF("cmd_type=%d, P=%d, grad_time=%d, L_flag=%d, brightness=%d, T_flag=%d, color_temp=%d, memory=%d, keep_time=%d, timer=%d\n",
-               cmd_type, P_flag, grad_time, L_flag, brightness, T_flag, color_temp, memory, keep_time, timer);
+    // APP_PRINTF("cmd_type=%d, P=%d, grad_time=%d, L_flag=%d, brightness=%d, T_flag=%d, color_temp=%d, memory=%d, keep_time=%d, timer=%d\n",
+    //            cmd_type, P_flag, grad_time, L_flag, brightness, T_flag, color_temp, memory, keep_time, timer);
 
     static light_ct_t temp;
     memset(&temp, 0, sizeof(temp));

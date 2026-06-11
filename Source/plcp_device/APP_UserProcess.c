@@ -15,7 +15,7 @@
  *
  ********************************************************************************/
 #include "../../Source/device/device_manager.h"
- 
+
 #include "../../Source./plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/base/base.h"
 #include "../../Source/base/debug.h"
@@ -168,6 +168,8 @@ void APP_PLCSDK_Init(void)
 
 #if defined PLCP_LIGHT_CT
     APP_Read_light_ct_info();
+    APP_ReadAllSceneInfo(); // 读取所有场景信息
+    APP_ReadAllGroupInfo(); // 读取所有群组信息
 #endif
 }
 
@@ -286,13 +288,11 @@ uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
             temp->order = buf[4];
         }
         attr_report_type_set(temp); // 保存到flash
-
-        attr_report_type_get(); // 设置完成后,读到全局静态变量
+        attr_report_type_get();     // 设置完成后,读到全局静态变量
     } break;
     default:
         return 0;
     }
-
     return 1;
 }
 
@@ -438,6 +438,7 @@ uint8_t MCU_Get_Config(uint8_t *buf, uint8_t type, uint16_t bits)
 // 执行默认场景
 void MCU_Scene_exe(uint8_t *buf, uint8_t buf_len)
 {
+    APP_PRINTF("MCU_Scene_exe\n");
 #if defined PLCP_PANEL
     parse_control_commands(buf, buf_len);
 #elif defined PLCP_LIGHT_CT
@@ -550,7 +551,7 @@ void MCU_Device_Factory(void)
     printf("MCU_Device_Factory\n");
 
     delay_1ms(100);
-
+#if defined PLCP_PANEL
     // 恢复出厂设置闪烁
     for (uint8_t cycle = 0; cycle < 2; cycle++) {
         // 全部亮
@@ -565,7 +566,7 @@ void MCU_Device_Factory(void)
         }
         delay_1ms(500);
     }
-
+#endif
     CmdTest_MSE_Factory();      // 模组恢复出厂设置
     APP_Attribute_Init();       // 清空联网状态
     APP_SceneGroupClr();        // 清空场景与群组
@@ -843,4 +844,3 @@ void APP_Queue_ListenAndHandleMessage(void)
         app_usart_tx_buf(txTask.nsdu, txTask.nsduLength, USART0);
     }
 }
- 

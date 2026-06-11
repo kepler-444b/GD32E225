@@ -23,9 +23,20 @@ fmc_state_enum light_ct_info_read(void)
     fmc_state_enum ret;
     // app_flash_erase_page(FLASH_LIGHT_CT_TABLE);
     ret = app_flash_read(FLASH_LIGHT_CT_TABLE, (uint32_t *)&powe_up_status, sizeof(powe_up_status));
-    if (ret != FMC_READY) return ret;
-    powe_up_status.grad_time = 10;
+    if (ret != FMC_READY)
+        return ret; 
+    if (powe_up_status.brightness == 0xFFFF) { // 第一次烧录,使用默认配置
+        powe_up_status.brightness = 0;
+        powe_up_status.color_temp = 4600;
+        powe_up_status.P_flag = 1;      // 使用默认渐变
+        powe_up_status.grad_time = 10; // 100ms
+        powe_up_status.timer = 0;
+        powe_up_status.keep_time = 0;
+        powe_up_status.memory = 0;
+        powe_up_status.brightness_type = false; // 默认使用百分比亮度
+    }
     APP_PRINTF("\n----- light_ct_t -----\n");
+
     APP_PRINTF("brightness     : %u\n", powe_up_status.brightness);
     APP_PRINTF("color_temp     : %u\n", powe_up_status.color_temp);
     APP_PRINTF("P_flag         : %u\n", powe_up_status.P_flag);
@@ -43,7 +54,8 @@ fmc_state_enum light_ct_info_save(void)
     fmc_state_enum ret;
 
     ret = app_flash_program(FLASH_LIGHT_CT_TABLE, (uint32_t *)&powe_up_status, sizeof(powe_up_status), true);
-    if (ret != FMC_READY) return ret;
+    if (ret != FMC_READY)
+        return ret;
 
     return ret;
 }

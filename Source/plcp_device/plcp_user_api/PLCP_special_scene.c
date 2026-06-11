@@ -181,8 +181,8 @@ void night_scene_open(void)
 static void night_delay(void *arg)
 {
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-        attr_led_b_table_set(i, 0); // 关闭背光灯
-        attr_led_table_set(i, 0);   // 关闭指示灯
+        switch_led_b_ctrl(i, 0, 1); // 关闭背光灯
+        switch_led_ctrl(i, 0);      // 关闭指示灯
     }
     my_NightScene.night_scene_current = 1; // 进入夜灯模式
     APP_PRINTF("night_scene_current_enternight:%d\n", my_NightScene.night_scene_current);
@@ -194,7 +194,7 @@ void night_scene_close(void)
     APP_PRINTF("night_scene_close\n");
     my_NightScene.night_scene_current = 0;
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-        attr_led_b_table_set(i, 100);
+        switch_led_b_ctrl(i, 100, 1);
     }
     APP_SaveNightSceneParameter();
 }
@@ -230,8 +230,9 @@ fmc_state_enum APP_ReadNightSceneParameter(void)
                my_NightScene.night_enable, my_NightScene.open_night, my_NightScene.close_night, my_NightScene.night_scene_current);
     if (my_NightScene.night_scene_current == 1) { // 恢复之前的夜灯模式
         for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            attr_led_b_table_set(i, 0); // 关闭背光灯
-            attr_led_table_set(i, 0);   // 关闭指示灯
+
+            switch_led_b_ctrl(i, 0, 1); // 关闭背光灯
+            switch_led_ctrl(i, 0);      // 关闭指示灯
         }
     } else {
         attr_key_state_table_recover();
