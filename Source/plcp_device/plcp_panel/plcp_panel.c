@@ -238,7 +238,7 @@ static void plcp_panel_tast(void *arg)
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
             if (APP_Attribute_GetPointer()->did != 0x0000) {
-                if (join_net == false) {     // 由为入网变为入网
+                if (join_net == false) {     // 由未入网变为入网
                     plcp_panel_blink(false); // 关闭所有指示灯
                     switch_api_init();
                     join_net = true;

@@ -391,10 +391,11 @@ uint8_t attr_key_state_table_set(uint8_t index, uint8_t on_off)
     }
     on_off = !!on_off;
     key_status_table[index] = on_off; // 设置按键状态
+#if defined PLCP_PANEL                // 只有灯控面板才需要切换指示灯及背光灯
 
     switch_led_ctrl(index, on_off);                // 控制 LED
     switch_led_b_ctrl(index, on_off ? 0 : 100, 1); // 控制背光灯,原逻辑:按键打开背光 0,关闭 100
-
+#endif
     switch_adapter_key_state_table_save(key_status_table, sizeof(key_status_table));
     return 1;
 }

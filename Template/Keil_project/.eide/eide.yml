@@ -92,6 +92,8 @@ virtualFolder:
         - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct.h
         - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.c
         - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.h
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_api.c
+        - path: ../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_api.h
       folders: []
     - name: cJSON
       files:

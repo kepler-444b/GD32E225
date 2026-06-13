@@ -471,9 +471,7 @@ void APP_BIND_Processing(UappsMessage *uappsMsg, uapps_rw_buffer_t *scratch)
 
     // 写入绑定信息
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
-        count = PLCP_CountBindDataInAddBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len);
-        APP_PRINTF("count:%d\n", count);
-
+        count = PLCP_CountBindDataInAddBindParam(uappsMsg->pl_ptr, uappsMsg->pl_len); // 统计写入绑定的条数
         if (count > 0) {
             for (i = 0; i < count; i++) {
                 memset(&msg, 0, MAX_BIND_MSG_LEN);

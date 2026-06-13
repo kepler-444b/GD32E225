@@ -18,6 +18,7 @@ typedef struct {
     uint16_t current_idx;
     uint16_t fade_counter;
     uint16_t fade_steps;
+    uint16_t dither_acc; // 抖动累加器
     bool active;
 } pwm_fade_ctrl_t;
 
@@ -158,7 +159,17 @@ void pwm_hw_fade_update(void *arg)
             return;
         }
 
-        uint16_t duty = fade_table[new_idx] * period / (FADE_TABLE_SIZE - 1);
+        uint32_t duty_fixed = (((uint32_t)fade_table[new_idx] * period) << 4) / (FADE_TABLE_SIZE - 1); // 先左移4位,强行还原被整除抹去的小数部分
+
+        uint16_t duty = (uint16_t)(duty_fixed >> 4);      // 右移 4 位还原出整数部分
+        uint8_t duty_frac = (uint8_t)(duty_fixed & 0x0F); // 取出低 4 位作为小数部分 (范围 0 ~ 15)
+
+        ch->dither_acc += duty_frac; // 累加器加上这次的小数
+        if (ch->dither_acc >= 16) {  // 满 16 进位
+            ch->dither_acc -= 16;
+            duty += 1;
+        }
+
         pwm_hw_set_duty(ch->pin, duty);
         ch->current_idx = new_idx;
 
@@ -166,6 +177,7 @@ void pwm_hw_fade_update(void *arg)
             duty = fade_table[ch->target_idx] * period / (FADE_TABLE_SIZE - 1);
             pwm_hw_set_duty(ch->pin, duty);
             ch->active = false;
+            ch->dither_acc = 0; // 清空累加器
         }
     }
 }
@@ -211,8 +223,13 @@ bool app_pwm_hw_add_pin(pwm_hw_pins hw_pin)
         timer_channel_output_struct_para_init(&timer_ocinitpara);
         timer_ocinitpara.outputstate = TIMER_CCX_ENABLE;
         timer_ocinitpara.outputnstate = TIMER_CCXN_DISABLE;
+#if defined PWM_HIGH
         timer_ocinitpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
         timer_ocinitpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
+#else
+        timer_ocinitpara.ocpolarity = TIMER_OC_POLARITY_LOW;
+        timer_ocinitpara.ocnpolarity = TIMER_OCN_POLARITY_LOW;
+#endif
         timer_ocinitpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
         timer_ocinitpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
 
@@ -244,8 +261,13 @@ bool app_pwm_hw_add_pin(pwm_hw_pins hw_pin)
         timer_channel_output_struct_para_init(&timer_ocinitpara);
         timer_ocinitpara.outputstate = TIMER_CCX_DISABLE;
         timer_ocinitpara.outputnstate = TIMER_CCXN_ENABLE;
+#if defined PWM_HIGH
         timer_ocinitpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
         timer_ocinitpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
+#else
+        timer_ocinitpara.ocpolarity = TIMER_OC_POLARITY_LOW;
+        timer_ocinitpara.ocnpolarity = TIMER_OCN_POLARITY_LOW;
+#endif
         timer_ocinitpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
         timer_ocinitpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
 

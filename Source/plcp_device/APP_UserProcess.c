@@ -153,24 +153,8 @@ void APP_PLCSDK_Init(void)
 {
     APP_TxBuffer_init();
     APP_RxBuffer_init();
-    // APP_GroupClr();
-    // APP_SceneClr();
-    /*
-        APP_ReadBindParameter(); // 读取绑定信息
 
-        APP_ReadDelaySceneParameter(); // 读取延时场景信息
-        APP_ReadNightSceneParameter(); // 读取夜灯场景信息
-
-        APP_ReadRecordFlag_Init(); // 初始化入网标志位
-        APP_ReadAllSceneInfo();    // 读取所有场景信息
-        APP_ReadAllGroupInfo();    // 读取所有群组信息 */
     APP_ReadRecordFlag_Init(); // 初始化入网标志位
-
-#if defined PLCP_LIGHT_CT
-    APP_Read_light_ct_info();
-    APP_ReadAllSceneInfo(); // 读取所有场景信息
-    APP_ReadAllGroupInfo(); // 读取所有群组信息
-#endif
 }
 
 /*****************************************************************************
@@ -454,6 +438,7 @@ void MCU_SceneKj_exe(uint8_t *buf, uint8_t kj_index, uint8_t kj_type)
     }
     switch (kj_type) {
     case LED_SCENE: // LED 场景
+        APP_PRINTF("kj_index:%d status:%d\n", kj_index, buf[1]);
         attr_key_state_table_set(kj_index, buf[1]);
         break;
     case CH_SCENE:

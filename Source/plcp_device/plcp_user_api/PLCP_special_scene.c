@@ -174,7 +174,11 @@ void night_scene_open(void)
         app_timer_start(10000, night_delay, false, NULL, "night_delay");
     }
 #elif defined PLCP_LIGHT_CT
-    attr_light_ct_table_set(false);
+    attr_light_ct_table_set(false); // 关闭灯
+    app_timer_stop("night_delay");
+    app_timer_stop("curtain_hold");
+
+    app_timer_start(10000, night_delay, false, NULL, "night_delay");
 #endif
 }
 

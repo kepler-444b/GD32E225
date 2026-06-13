@@ -1,7 +1,8 @@
 #include "plcp_light_ct.h"
 #include "../../Source/device/device_manager.h"
+#include "../../Source/eventbus/eventbus.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
-#include "../../Source/plcp_device/plcp_linght_ct/light_ct_attr_table.h"
+#include "../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_api.h"
 #include "../../Source/plcp_device/plcp_linght_ct/plcp_light_ct_info.h"
 #include "../../Source/pwm/pwm_hw.h"
 #include "../../Source/timer/timer.h"
@@ -16,7 +17,7 @@ void CmdTest_MSE_GET_CC0MAC();
 
 // 函数声明
 static void process_message_queue(void *arg);
-static void plcp_panel_tast(void *arg);
+static void plcp_panel_task(void *arg);
 
 static uint16_t timer_8s_count;
 static uint16_t timer_7s_count;
@@ -33,6 +34,12 @@ static uint16_t led_blink_count = 0;
 
 const sPost_wflash *sPost_flag = NULL;
 
+static volatile bool key_pressed = false; //  按键已经被按下
+static uint16_t key_pressed_count = 0;
+
+static volatile bool key_press_pending = false; // 中断触发标记
+static uint16_t key_cooldown_count = 0;         // 按键冷却/节流计数器
+
 void plcp_light_ct_init(void)
 {
     APP_PRINTF("plcp_light_ct_init\n");
@@ -41,12 +48,11 @@ void plcp_light_ct_init(void)
     app_pwm_hw_add_pin(PWM_PB0);
     app_pwm_hw_add_pin(PWM_PB1);
 
-    app_timer_start(10, plcp_panel_tast, true, NULL, "task");
+    app_timer_start(10, plcp_panel_task, true, NULL, "task");
     app_timer_start(50, process_message_queue, true, NULL, "message_queue");
     // app_flash_mass_erase();
-    
+
     APP_PLCSDK_Init();
-    attr_light_ct_table_set(true);
     sPost_flag = APP_Postflag_GetPointer();
 }
 
@@ -55,7 +61,7 @@ static void process_message_queue(void *arg)
     APP_Queue_ListenAndHandleMessage();
 }
 
-static void plcp_panel_tast(void *arg)
+static void plcp_panel_task(void *arg)
 {
     timer_5s_count++;
     if (timer_5s_count >= 500) { // 5s 写产品信息
@@ -113,10 +119,13 @@ static void plcp_panel_tast(void *arg)
             CmdTest_MSE_GET_CC0MAC();
             if (APP_Attribute_GetPointer()->did != 0x0000) {
                 if (join_net == false) { // 由为入网变为入网
-                    join_net = true;     // 入网标识
+                    light_api_init();
+                    join_net = true; // 入网标识
+
+                    app_set_pwm_hw_fade(PWM_PB0, 0, 5000); // 暖白 PB0
                 }
             } else {
-                if (join_net == true) { // 由入网变为为入网
+                if (join_net == true) { // 由入网变为未入网
                     join_net = false;
                 }
             }
@@ -124,18 +133,56 @@ static void plcp_panel_tast(void *arg)
     }
     if (join_net == false) {
         led_blink_count++;
-        if (led_blink_count >= 600) {
+        if (led_blink_count >= 100) {
             led_blink_count = 0;
             led_blink = !led_blink;
             if (led_blink) {
-                app_set_pwm_hw_fade(PWM_PB0, 1000, 5000); // 暖白 PB0
-                app_set_pwm_hw_fade(PWM_PB1, 1000, 5000); // 白光 PB1
+                app_set_pwm_hw_fade(PWM_PB0, 1000, 1000); // 暖白 PB0
+                app_set_pwm_hw_fade(PWM_PB1, 1000, 1000); // 白光 PB1
             } else {
-                app_set_pwm_hw_fade(PWM_PB0, 0, 5000); // 暖白 PB0
-                app_set_pwm_hw_fade(PWM_PB1, 0, 5000); // 白光 PB1
+                app_set_pwm_hw_fade(PWM_PB0, 0, 1000); // 暖白 PB0
+                app_set_pwm_hw_fade(PWM_PB1, 0, 1000); // 白光 PB1
             }
+        }
+    }
+
+    if (key_cooldown_count > 0) { // 按键冷却
+        key_cooldown_count--;     // 处于冷却期,计数器每10ms减1
+    }
+
+    // 中断触发
+    if (key_press_pending) {
+        key_press_pending = false; // 清除中断标记
+
+        if (key_cooldown_count == 0) { // 且当前不在冷却期内
+            light_api_button_event_handler(0, 0);
+        }
+    }
+
+    if (key_pressed == true) { // 按键按下状态
+        key_pressed_count++;
+        if (key_pressed_count >= 500) {
+            key_pressed = false;
+            CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER); // 申请入网
         }
     }
 }
 
+// 干接点触发中断服务函数
+void EXTI0_1_IRQHandler(void)
+{
+    if (RESET != exti_interrupt_flag_get(EXTI_0)) {
+        exti_interrupt_flag_clear(EXTI_0);
+
+        // 读引脚电平,判断是上升沿还是下降沿触发
+        if (RESET != gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 上升沿(按键抬起)
+            key_pressed = false;
+            key_pressed_count = 0;
+            key_press_pending = true;
+
+        } else if (RESET == gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 下降沿(按键按下)
+            key_pressed = true;
+        }
+    }
+}
 #endif

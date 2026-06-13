@@ -27,8 +27,7 @@ void light_adapter_ctrl(const light_ct_t *ctrl)
 }
 
 void light_adapter_close(uint8_t grad_time)
-{
-
+{ 
     app_set_pwm_hw_fade(PWM_PB0, 0, grad_time * 100); // 暖白 PB0
     app_set_pwm_hw_fade(PWM_PB1, 0, grad_time * 100); // 白光 PB1
 }

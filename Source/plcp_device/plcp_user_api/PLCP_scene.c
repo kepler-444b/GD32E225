@@ -238,7 +238,6 @@ static fmc_state_enum APP_ReadSceneParameter(void)
             break;
         }
 #if 1
-        APP_PRINTF("DeviceScene[%d].sceneId[%04X] ", i, DeviceScene[i].sceneId);
         if ((DeviceScene[i].scenePower[0]) != 0xFF) {
             APP_PRINTF_BUF(".open", DeviceScene[i].scenePower, DeviceScene[i].scenePower[0] + 1);
         }
@@ -254,14 +253,14 @@ static fmc_state_enum APP_ReadSceneParameter(void)
 bool APP_ReadAllSceneInfo(void)
 {
     fmc_state_enum ret = FMC_READY;
-#if defined PLCP_PANEL
+
     // if (APP_ReadChSceneParameter() != FMC_READY) {
     //     ret++;
     // }
     if (APP_ReadLedSceneParameter() != FMC_READY) {
         ret++;
     }
-#endif
+
     if (APP_ReadSceneParameter() != FMC_READY) {
         ret++;
     }
@@ -861,7 +860,6 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
                 }
             }
         }
-
         // 默认场景处理
         for (uint8_t i_scene = 0; i_scene < sceneIndex; i_scene++) {
             if (DeviceScene[i_scene].sceneId == sceneId) {
@@ -870,13 +868,6 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
                 break;
             }
         }
-    }
-
-    if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
-        if (sceneId == night_scene_info_get()->open_night) {
-            night_scene_open();
-        }
-        respondCode = UAPPS_ACK_CHANGED;
     }
 
     if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {

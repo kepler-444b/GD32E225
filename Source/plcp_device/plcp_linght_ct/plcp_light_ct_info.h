@@ -17,11 +17,11 @@ typedef struct
 typedef struct {
     uint16_t brightness; // 亮度
     uint16_t color_temp; // 色温
-    uint8_t P_flag;      // 渐变类型 0-3
-    uint8_t grad_time;   // 渐变时间，单位100ms，仅 P_flag=2 有效
-    uint32_t timer;      // 定时功能，Ti_flag=1 时有效
-    uint16_t keep_time;  // 维持时间，K_flag=1 且 Ti_flag=0 时有效
-    uint8_t memory;      // 断电记忆，M_flag=1 且 Ti_flag/K_flag=0 时有效
+    uint8_t P_flag;      // 渐变类型,0-3
+    uint8_t grad_time;   // 渐变时间,单位100ms,仅 P_flag=2 有效
+    uint32_t timer;      // 定时功能,Ti_flag=1 时有效
+    uint16_t keep_time;  // 维持时间,K_flag=1 且 Ti_flag=0 时有效
+    uint8_t memory;      // 断电记忆,M_flag=1 且 Ti_flag/K_flag=0 时有效
     bool brightness_type;
 } light_ct_t;
 

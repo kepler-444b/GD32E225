@@ -10,12 +10,22 @@ void plcp_light_ct_pins_init(void)
     rcu_periph_clock_enable(RCU_GPIOB);
 
     // 2 路PWM调光,双色温
-    gpio_mode_set(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_0 | GPIO_PIN_1);
+    gpio_mode_set(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO_PIN_0 | GPIO_PIN_1);
     gpio_output_options_set(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0 | GPIO_PIN_1);
     gpio_af_set(GPIOB, GPIO_AF_1, GPIO_PIN_0 | GPIO_PIN_1);
 
     light_ct_pins.led_y = PWM_PB0;
     light_ct_pins.led_w = PWM_PB1;
+
+    // 干接点中断触发引脚
+    rcu_periph_clock_enable(RCU_GPIOA);
+    gpio_mode_set(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_0); // 上拉
+    syscfg_exti_line_config(EXTI_SOURCE_GPIOA, EXTI_SOURCE_PIN0);        // 引脚映射到中断线
+    // exti_init(EXTI_0, EXTI_INTERRUPT, EXTI_TRIG_FALLING);                // 下降沿触发
+    exti_init(EXTI_0, EXTI_INTERRUPT, EXTI_TRIG_BOTH); // 双边触发(上升沿/下降沿)
+    exti_interrupt_flag_clear(EXTI_0);
+
+    nvic_irq_enable(EXTI0_1_IRQn, 2);
 }
 
 fmc_state_enum light_ct_info_read(void)
@@ -24,11 +34,11 @@ fmc_state_enum light_ct_info_read(void)
     // app_flash_erase_page(FLASH_LIGHT_CT_TABLE);
     ret = app_flash_read(FLASH_LIGHT_CT_TABLE, (uint32_t *)&powe_up_status, sizeof(powe_up_status));
     if (ret != FMC_READY)
-        return ret; 
+        return ret;
     if (powe_up_status.brightness == 0xFFFF) { // 第一次烧录,使用默认配置
         powe_up_status.brightness = 0;
         powe_up_status.color_temp = 4600;
-        powe_up_status.P_flag = 1;      // 使用默认渐变
+        powe_up_status.P_flag = 1;     // 使用默认渐变
         powe_up_status.grad_time = 10; // 100ms
         powe_up_status.timer = 0;
         powe_up_status.keep_time = 0;

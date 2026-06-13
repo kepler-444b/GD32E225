@@ -1080,7 +1080,6 @@ uint8_t PLCP_eventReport(uint8_t eventSE, char *eventAEI, char *eventID, U32 dat
     } else if (strcmp(eventID, "_stop") == 0) {
         cJSON_AddStringToObject(repotJson, "name", "STOP");
     }
-
     if (data < 0xffffffff) {
         memset((uint8_t *)tempSrt, 0, UAPPS_MAX_OPTLEN);
         sprintf(tempSrt, "%d", data);
@@ -1115,10 +1114,8 @@ uint8_t PLCP_eventReport(uint8_t eventSE, char *eventAEI, char *eventID, U32 dat
 
 uint8_t PLCP_WigetEventWithType(uint8_t eventSE, char *eventAEI, char *eventID, U32 eventValue, char *eventType)
 {
-    uint8_t ret_1, ret_2;
-
+    uint8_t ret_1, ret_2; 
     const report *p_report = app_report_get();
-
     if (p_report->order == 0x00) { // 先上报事件,再上报绑定信息
         ret_1 = PLCP_eventReport(eventSE, eventAEI, eventID, eventValue, eventType, REPORT_TARGET_RES);
         ret_2 = PLCP_sendBindMsg(eventSE, eventAEI, eventID, 0, 0);

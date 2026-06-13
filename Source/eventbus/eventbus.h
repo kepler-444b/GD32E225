@@ -36,6 +36,7 @@ typedef enum {
 
     PLCP_COPY_GET,
     PLCP_PANEL_KEY,
+
     // 添加更多事件类型...
     EVENT_COUNT // 自动计算事件数量
 } event_type_e;
