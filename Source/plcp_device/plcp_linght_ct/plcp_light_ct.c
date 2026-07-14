@@ -122,7 +122,7 @@ static void plcp_panel_task(void *arg)
                     light_api_init();
                     join_net = true; // 入网标识
 
-                    app_set_pwm_hw_fade(PWM_PB0, 0, 5000); // 暖白 PB0
+                    // app_set_pwm_hw_fade(PWM_PB0, 0, 5000); // 暖白 PB0
                 }
             } else {
                 if (join_net == true) { // 由入网变为未入网
@@ -132,18 +132,18 @@ static void plcp_panel_task(void *arg)
         }
     }
     if (join_net == false) {
-        led_blink_count++;
-        if (led_blink_count >= 100) {
-            led_blink_count = 0;
-            led_blink = !led_blink;
-            if (led_blink) {
-                app_set_pwm_hw_fade(PWM_PB0, 1000, 1000); // 暖白 PB0
-                app_set_pwm_hw_fade(PWM_PB1, 1000, 1000); // 白光 PB1
-            } else {
-                app_set_pwm_hw_fade(PWM_PB0, 0, 1000); // 暖白 PB0
-                app_set_pwm_hw_fade(PWM_PB1, 0, 1000); // 白光 PB1
-            }
-        }
+        // led_blink_count++;
+        // if (led_blink_count >= 100) {
+        //     led_blink_count = 0;
+        //     led_blink = !led_blink;
+        //     if (led_blink) {
+        //         app_set_pwm_hw_fade(PWM_PB0, 1000, 1000); // 暖白 PB0
+        //         app_set_pwm_hw_fade(PWM_PB1, 1000, 1000); // 白光 PB1
+        //     } else {
+        //         app_set_pwm_hw_fade(PWM_PB0, 0, 1000); // 暖白 PB0
+        //         app_set_pwm_hw_fade(PWM_PB1, 0, 1000); // 白光 PB1
+        //     }
+        // }
     }
 
     if (key_cooldown_count > 0) { // 按键冷却
@@ -161,7 +161,7 @@ static void plcp_panel_task(void *arg)
 
     if (key_pressed == true) { // 按键按下状态
         key_pressed_count++;
-        if (key_pressed_count >= 500) {
+        if (key_pressed_count >= 500) { // 长按 5s
             key_pressed = false;
             CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER); // 申请入网
         }
@@ -177,11 +177,13 @@ void EXTI0_1_IRQHandler(void)
         // 读引脚电平,判断是上升沿还是下降沿触发
         if (RESET != gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 上升沿(按键抬起)
             key_pressed = false;
-            key_pressed_count = 0;
-            key_press_pending = true;
+            // key_pressed_count = 0;
+            // key_press_pending = true;
 
         } else if (RESET == gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 下降沿(按键按下)
             key_pressed = true;
+            key_pressed_count = 0;
+            key_press_pending = true;
         }
     }
 }

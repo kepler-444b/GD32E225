@@ -617,11 +617,24 @@ uint8_t APP_Group_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_
     uapps_rw_buffer_t scratch;
     memset(&scratch, 0, sizeof(uapps_rw_buffer_t));
 
-    if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
-        if (night_scene_state_get() == 0x02) {          // 即将进入夜灯模式(此时收到任何群组都退出夜灯模式)
-            delay_scene_stop();
+    const NightScene_t *temp = night_scene_info_get();
+    for (uint8_t j = 0; j < NIGHT_SCENE_MAX; j++) {
+        if (temp[j].night_enable == 0x01) {
+            if (night_scene_state_get(j) == 0x02) { // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
+                delay_scene_stop(j);
+            }
+
+            if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
+                night_scene_close(j);
+            }
         }
     }
+
+    // if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
+    //     if (night_scene_state_get() == 0x02) {          // 即将进入夜灯模式(此时收到任何群组都退出夜灯模式)
+    //         delay_scene_stop();
+    //     }
+    // }
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp((char *)rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {
             break;
@@ -675,15 +688,18 @@ void APP_Scene_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *
 {
     APP_PRINTF("APP_Scene_TOPIC_MSEProcessing\n");
     uint16_t i = 0;
-    if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
-        if (night_scene_state_get() == 0x02) {          // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
-            delay_scene_stop();
-        }
+    // const NightScene_t *temp = night_scene_info_get();
+    // for (uint8_t j = 0; j < NIGHT_SCENE_MAX; j++) {
+    //     if (temp[j].night_enable == 0x01) {
+    //         if (night_scene_state_get(j) == 0x02) { // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
+    //             delay_scene_stop(j);
+    //         }
 
-        if (night_scene_state_get() == 0x01) { // 当前是夜灯模式
-            night_scene_close();
-        }
-    }
+    //         if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
+    //             night_scene_close(j);
+    //         }
+    //     }
+    // }
 
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp((char *)rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {

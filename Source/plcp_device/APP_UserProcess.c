@@ -242,7 +242,7 @@ uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
         }
     } break;
 
-    case SCENE_LINK: {
+    case SCENE_LINK: { // 夜灯联动
         special_scene_set(buf, buf_len);
     } break;
     case RELAY_POWER_UP: {

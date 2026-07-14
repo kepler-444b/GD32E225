@@ -407,7 +407,7 @@ void attr_key_state_table_recover(void)
         APP_ERROR("attr_kj_mode_table_reset");
     } else {
         // APP_PRINTF_BUF("state_table", key_status_table, sizeof(key_status_table));
-        APP_PRINTF("\n");
+        // APP_PRINTF("\n");
     }
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
         attr_key_state_table_set(i, key_status_table[i]);

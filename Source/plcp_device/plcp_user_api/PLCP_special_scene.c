@@ -8,8 +8,6 @@
 #include "../../Source/timer/timer.h"
 #include "../../device/device_manager.h"
 
-bool curtain_exe = false; // 是否已开启窗帘定时器
-
 // 函数声明
 static void night_delay(void *arg);
 
@@ -18,12 +16,13 @@ static uint16_t delay_scene_time = 0;
 static uint8_t delay_scene_active_timer = 0xff;
 static void (*delay_scene_active_handler_fun)(void) = NULL;
 
-static DelayScene_t my_DelayScene = {0};
-static NightScene_t my_NightScene = {0};
+static DelayScene_t my_DelayScene[NIGHT_SCENE_MAX] = {0};
+static NightScene_t my_NightScene[5] = {0};
 
 uint8_t special_scene_set(uint8_t *data, uint8_t len)
 {
     uint16_t ctrl_bits = (data[1] << 8) | data[2];
+    uint8_t delay_insert = data[2]; // 夜灯数组插入位置
 
     if ((ctrl_bits >> 15) & 0x01) { // 延时场景
         uint16_t delay_id = 0;
@@ -32,24 +31,21 @@ uint8_t special_scene_set(uint8_t *data, uint8_t len)
         if (delay_id == 0 || delay_id == 0xFFFF)
             return 0;
 
-        my_DelayScene.enable = data[3];
-        memcpy((uint8_t *)&my_DelayScene.scene_id, &data[4], 2);
-        memcpy((uint8_t *)&my_DelayScene.scene_timer, &data[6], 2);
+        my_DelayScene[0].enable = data[3];
+        memcpy((uint8_t *)&my_DelayScene[0].scene_id, &data[4], 2);
+        memcpy((uint8_t *)&my_DelayScene[0].scene_timer, &data[6], 2);
 
-        APP_PRINTF("enable:%d my_DelayScene[i].scene_id:%04X my_DelayScene[i].scene_timer:%04X\n", my_DelayScene.enable, my_DelayScene.scene_id, my_DelayScene.scene_timer);
+        APP_PRINTF("enable:%d my_DelayScene[i].scene_id:%04X my_DelayScene[i].scene_timer:%04X\n", my_DelayScene[0].enable, my_DelayScene[0].scene_id, my_DelayScene[0].scene_timer);
 
         if (APP_SaveDelaySceneParameter() != FMC_READY) {
             APP_PRINTF("APP_SaveDelaySceneParameter error\n");
         }
     }
     if ((ctrl_bits >> 14) & 0x01) { // 夜灯场景
-
-        my_NightScene.night_enable = data[8];
-        memcpy((uint8_t *)&my_NightScene.open_night, &data[9], 2);
-        memcpy((uint8_t *)&my_NightScene.close_night, &data[11], 2);
-
-        APP_PRINTF("enable:%d my_NightScene.open_night:%04X my_NightScene.close_nightL:%04X\n",
-                   my_NightScene.night_enable, my_NightScene.open_night, my_NightScene.close_night);
+        my_NightScene[delay_insert].night_enable = data[8];
+        my_NightScene[delay_insert].night_scene_current = 0;
+        memcpy((uint8_t *)&my_NightScene[delay_insert].open_night, &data[9], 2);
+        memcpy((uint8_t *)&my_NightScene[delay_insert].close_night, &data[11], 2);
 
         if (APP_SaveNightSceneParameter() != FMC_READY) {
             APP_PRINTF("APP_SaveNightSceneParameter error\n");
@@ -61,12 +57,12 @@ uint8_t special_scene_set(uint8_t *data, uint8_t len)
 // 返回夜灯结构体
 NightScene_t *special_night_scene_get(void)
 {
-    return &my_NightScene;
+    return my_NightScene;
 }
 
 DelayScene_t *special_delay_scene_get(void)
 {
-    return &my_DelayScene;
+    return my_DelayScene;
 }
 
 // 保存延时场景参数到flash中
@@ -85,9 +81,13 @@ fmc_state_enum APP_ReadDelaySceneParameter(void)
     if (ret != FMC_READY) {
         return ret;
     }
-
-    APP_PRINTF("my_DelayScene.scene_id:[%04X].enable[%d].timer[%04X]\n", my_DelayScene.scene_id, my_DelayScene.enable, my_DelayScene.scene_timer);
-
+    if (my_DelayScene[0].enable == 0xFF) {
+        my_DelayScene[0].enable = 1;
+        my_DelayScene[0].scene_id = 0x0206;
+        my_DelayScene[0].scene_timer = 0x0A;
+        APP_PRINTF("Use default delay scene\n");
+    }
+    // APP_PRINTF("my_DelayScene.scene_id:[%04X].enable[%d].timer[%04X]\n", my_DelayScene.scene_id, my_DelayScene.enable, my_DelayScene.scene_timer);
     return ret;
 }
 
@@ -141,44 +141,48 @@ uint8_t delay_scene_active(uint16_t scene_id, void (*delay_scene_active_handler)
 }
 #endif
 
-void delay_scene_stop(void)
+void delay_scene_stop(uint8_t night_num)
 {
     app_timer_stop("night_delay");
-    curtain_exe = false;
-    my_NightScene.night_scene_current = 0;
-    APP_PRINTF("my_NightScene.night_scene_current:%d\n", my_NightScene.night_scene_current);
+    my_NightScene[night_num].night_scene_current = 0;
+    for (uint8_t i = 0; i < 5; i++) {
+        APP_PRINTF("night_scene_current[%d] :%d\n", i, my_NightScene[i].night_scene_current);
+    }
+    APP_PRINTF("my_NightScene[%d].night_scene_current:%d\n", night_num, my_NightScene[night_num].night_scene_current);
 }
 
 /*************************************************************************/
 
 const NightScene_t *night_scene_info_get(void)
 {
-    return &my_NightScene;
+    return my_NightScene;
 }
 
-const uint8_t night_scene_state_get(void)
+const uint8_t night_scene_state_get(uint8_t night_mun)
 {
-    return my_NightScene.night_scene_current;
+    return my_NightScene[night_mun].night_scene_current;
 }
 
-void night_scene_open(void)
+void night_scene_open(uint8_t night_num)
 {
-    my_NightScene.night_scene_current = 2; // 即将进入夜灯模式
+    my_NightScene[night_num].night_scene_current = 2; // 即将进入夜灯模式
+
+    // for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
+    //     APP_PRINTF("my_NightScene[%d].night_scene_current:%d\n", i, my_NightScene[i].night_scene_current);
+    // }
+
+    static uint8_t s_night_num = 0;
+    s_night_num = night_num;
+
 #if defined PLCP_PANEL
-    for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+    attr_key_state_table_recover(); // 恢复按键状态
+    app_timer_stop("night_delay");
+    app_timer_start(10000, night_delay, false, &s_night_num, "night_delay");
 
-        attr_key_state_table_recover(); // 恢复按键状态
-        app_timer_stop("night_delay");
-        app_timer_stop("curtain_hold");
-
-        app_timer_start(10000, night_delay, false, NULL, "night_delay");
-    }
 #elif defined PLCP_LIGHT_CT
     attr_light_ct_table_set(false); // 关闭灯
     app_timer_stop("night_delay");
-    app_timer_stop("curtain_hold");
-
-    app_timer_start(10000, night_delay, false, NULL, "night_delay");
+    app_timer_start(10000, night_delay, false, &s_night_num, "night_delay");
 #endif
 }
 
@@ -188,15 +192,22 @@ static void night_delay(void *arg)
         switch_led_b_ctrl(i, 0, 1); // 关闭背光灯
         switch_led_ctrl(i, 0);      // 关闭指示灯
     }
-    my_NightScene.night_scene_current = 1; // 进入夜灯模式
-    APP_PRINTF("night_scene_current_enternight:%d\n", my_NightScene.night_scene_current);
+
+    uint8_t night_num = *(uint8_t *)arg;
+    APP_PRINTF("night_num:%d\n", night_num);
+
+    my_NightScene[night_num].night_scene_current = 1; // 进入夜灯模式
+    for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
+        APP_PRINTF("my_NightScene[%d].night_scene_current:%d\n", i, my_NightScene[i].night_scene_current);
+    }
     APP_SaveNightSceneParameter();
 }
 
-void night_scene_close(void)
+// 退出夜灯模式
+void night_scene_close(uint8_t night_num)
 {
-    APP_PRINTF("night_scene_close\n");
-    my_NightScene.night_scene_current = 0;
+    APP_PRINTF("[%d]night_scene_close\n", night_num);
+    my_NightScene[night_num].night_scene_current = 0;
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
         switch_led_b_ctrl(i, 100, 1);
     }
@@ -204,17 +215,17 @@ void night_scene_close(void)
 }
 
 // 关闭夜灯模式
-void night_scene_off_send(void)
+void night_scene_off_send(uint8_t night_num)
 {
     char rsl_str[64];
     uint16_t scene;
-    if (my_NightScene.night_scene_current == 1 && my_NightScene.open_night != 0xffff && my_NightScene.open_night != 0) {
-        scene = my_NightScene.open_night;
+    if (my_NightScene[night_num].night_scene_current == 1 && my_NightScene[night_num].open_night != 0xffff && my_NightScene[night_num].open_night != 0) {
+        scene = my_NightScene[night_num].open_night;
         scene = (scene >> 8) | (scene << 8); // 交换端序号
         snprintf(rsl_str, sizeof(rsl_str), "%04X@SE202.FFFFFFFFFFFF/_on", scene);
         APP_SendRSL(rsl_str, 0, NULL, 0);
     }
-    my_NightScene.night_scene_current = 0;
+    my_NightScene[night_num].night_scene_current = 0;
     APP_SaveNightSceneParameter();
 }
 
@@ -228,13 +239,34 @@ fmc_state_enum APP_SaveNightSceneParameter(void)
 fmc_state_enum APP_ReadNightSceneParameter(void)
 {
     fmc_state_enum ret;
+    bool use_default_night_scenes = false;
     ret = app_flash_read(FLASH_PANEL_NIGHT_SCENE, (uint32_t *)&my_NightScene, sizeof(my_NightScene));
 
-    APP_PRINTF("my_NightScene.enable:%d open_night:%04X close_night:%04X night_scene_current:%d\n\n",
-               my_NightScene.night_enable, my_NightScene.open_night, my_NightScene.close_night, my_NightScene.night_scene_current);
-    if (my_NightScene.night_scene_current == 1) { // 恢复之前的夜灯模式
-        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+    if (my_NightScene[0].night_enable == 0xFF) {
+        use_default_night_scenes = true;
+        my_NightScene[0].night_enable = 1;
+        my_NightScene[0].open_night = 0x0206;
+        my_NightScene[0].close_night = 0x0206;
+        my_NightScene[0].night_scene_current = 0;
+    }
+    if (my_NightScene[1].night_enable == 0xFF) {
+        use_default_night_scenes = true;
+        my_NightScene[1].night_enable = 1;
+        my_NightScene[1].open_night = 0x0300;
+        my_NightScene[1].close_night = 0x0300;
+        my_NightScene[1].night_scene_current = 0;
+    }
+    if (use_default_night_scenes == true) {
+        APP_SaveNightSceneParameter();
+        APP_PRINTF("use default night scenes\n");
+    }
 
+    for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
+        APP_PRINTF("my_NightScene[%d].enable:%d open_night:%04X close_night:%04X night_scene_current:%d\n",
+                   i, my_NightScene[i].night_enable, my_NightScene[i].open_night, my_NightScene[i].close_night, my_NightScene[i].night_scene_current);
+    }
+    if (my_NightScene[0].night_scene_current == 1) { // 恢复之前的夜灯模式
+        for (uint8_t i = 0; i < KEY_NUMBER; i++) {
             switch_led_b_ctrl(i, 0, 1); // 关闭背光灯
             switch_led_ctrl(i, 0);      // 关闭指示灯
         }

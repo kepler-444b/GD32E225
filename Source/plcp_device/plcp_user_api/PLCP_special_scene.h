@@ -5,10 +5,10 @@
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/flash/flash.h"
 
-extern bool curtain_exe;
-
 #define FLASH_PANEL_DELAY_TABLE 0x0801E000UL // 120页
 #define FLASH_PANEL_NIGHT_SCENE 0x0801E400UL // 121页
+
+#define NIGHT_SCENE_MAX         5 // 夜灯场景数组
 
 typedef struct {
     uint8_t enable;
@@ -31,16 +31,21 @@ delay_scene_set(uint16_t scene_id, uint16_t time);
 uint16_t delay_scene_id_get(void);
 uint16_t delay_scene_time_get(void);
 uint8_t delay_scene_active(uint16_t scene_id, void (*delay_scene_active_handler)(void));
-void delay_scene_stop(void);
+// void delay_scene_stop(void);
+void delay_scene_stop(uint8_t night_num);
 
 /*************************************************************************/
 const NightScene_t *night_scene_info_get(void);
-const uint8_t night_scene_state_get(void);
+// const uint8_t night_scene_state_get(void);
+const uint8_t night_scene_state_get(uint8_t night_mun);
 
-void night_scene_open(void);
-void night_scene_close(void);
+// void night_scene_open(void);
+void night_scene_open(uint8_t night_num);
+// void night_scene_close(void);
+void night_scene_close(uint8_t night_num);
 
-void night_scene_off_send(void);
+// void night_scene_off_send(void);
+void night_scene_off_send(uint8_t night_num);
 
 uint8_t special_scene_set(uint8_t *data, uint8_t len);
 NightScene_t *special_night_scene_get(void);

@@ -44,17 +44,274 @@ static fmc_state_enum APP_SaveBindParameter(void)
 fmc_state_enum APP_ReadBindParameter(void)
 {
     fmc_state_enum ret;
+    bool use_default_binds = false;
 
     ret = app_flash_read(FLASH_BIND_INFO_H_START_ADD, (uint32_t *)gBindDataBase, MAX_BIND_TABLE_SIZE * sizeof(bindDataType));
     if (ret != FMC_READY) {
         return ret;
     }
+#if defined DEFAUTL_CURTAIN_PANEL // 默认窗帘逻辑绑定
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_DND_CLEAR_PANEL || defined DEFAUTL_DND_CLEAR_PANEL_JY // 勿扰 清理 卫浴 排气扇
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_CLEAR_DND_TOILET_PANEL // 清理 勿扰 马桶间 排气扇
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_CLEAR_DND_PANEL // 清理 清理 勿扰 勿扰
+
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_ALL_OPEN_ALL_CLOSE // 全开 全关 马桶间 排气扇
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0001@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        // {"k1", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0003@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        // {"k2", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_BATH_EXHA_PANEL // 卫浴 排气扇
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_MIRROR_LINGHT_PANEL || defined DEFAUTL_MIRROR_LINGHT_PANEL_JY
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k5", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k5", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_ALL_OPEN_BATH_PANEL
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0001@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 全开
+        {"k1", "_close", "{\"rsl\":\"0003@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 全关
+        {"k2", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 卫浴开
+        {"k2", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 卫浴关
+        {"k3", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 柔光开
+        {"k3", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 柔光关
+        {"k4", "_open", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 夜灯开
+        {"k4", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 夜灯关
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+#elif defined DEFAUTL_BATH_ALL_OPEN_PANEL
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 卫浴开
+        {"k1", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 卫浴关
+        {"k2", "_open", "{\"rsl\":\"0001@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 全开
+        {"k2", "_close", "{\"rsl\":\"0003@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 全关
+        {"k3", "_open", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 夜灯开
+        {"k3", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 夜灯关
+        {"k4", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 柔光开
+        {"k4", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 柔光关
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_AROM_LINGHT_PANEL
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k5", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k5", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+#elif defined DEFAUTL_AROM_FIRE_PANEL // 香薰 壁炉
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1500@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1600@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1600@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1600@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1600@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_MIRROR_LIGHT_CT // 台盆镜灯
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_BED_LIGHT_CT_L // 床头花灯(左)
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"2000@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"2000@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+#elif defined DEFAUTL_BED_LIGHT_CT_R // 床头花灯(右)
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"2100@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"2100@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+#else
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[1] = {{0, 0, 0}};
+    uint8_t config_count = 0;
+#endif
+
+    if (config_count > MAX_BIND_TABLE_SIZE) {
+        config_count = MAX_BIND_TABLE_SIZE;
+    }
+    for (uint8_t i = 0; i < config_count; i++) {
+        if (gBindDataBase[i].se == 0xFF) {
+            use_default_binds = true;
+            gBindDataBase[i].se = 1;
+            snprintf(gBindDataBase[i].aei, AEI_MAX_LEN, "%s", default_configs[i].aei);
+            snprintf(gBindDataBase[i].id, AEI_MAX_LEN, "%s", default_configs[i].id);
+            snprintf(gBindDataBase[i].msg, MAX_BIND_MSG_LEN, "%s", default_configs[i].msg);
+        }
+    }
+
+    if (use_default_binds == true) { // 使用默认的绑定信息
+        APP_PRINTF("use_default_binds\n");
+        APP_SaveBindParameter();
+    }
     for (uint8_t i = 0; i < MAX_BIND_TABLE_SIZE; i++) {
-        if (gBindDataBase[i].se == 0) {
-            gBindDataBase[i].se = 0xff;
-        } else if (gBindDataBase[i].se != 0xFF) {
-            // APP_PRINTF("gBindDataBase[%d].se[%02X]\n", i, gBindDataBase[i].se);
-            APP_PRINTF(".ae[%s].id[%s].msg[%s]\n", gBindDataBase[i].aei, gBindDataBase[i].id, gBindDataBase[i].msg);
+        if (gBindDataBase[i].se != 0xFF) {
+            APP_PRINTF(".se[%02X].ae[%s].id[%s].msg[%s]\n", gBindDataBase[i].se, gBindDataBase[i].aei, gBindDataBase[i].id, gBindDataBase[i].msg);
         }
     }
     APP_PRINTF("\n");
@@ -113,7 +370,6 @@ uint8_t PLCP_BindTableRead_aei(const char *group_num, const char *cmd, aei_t out
     for (uint8_t i = 0; i < MAX_BIND_TABLE_SIZE; i++) {
 
         if (strstr(gBindDataBase[i].msg, group_num) != NULL &&
-
             strstr(gBindDataBase[i].msg, cmd) != NULL) {
             if (count < max_num) {
                 strcpy(out_aei[count], gBindDataBase[i].aei);
@@ -1114,7 +1370,7 @@ uint8_t PLCP_eventReport(uint8_t eventSE, char *eventAEI, char *eventID, U32 dat
 
 uint8_t PLCP_WigetEventWithType(uint8_t eventSE, char *eventAEI, char *eventID, U32 eventValue, char *eventType)
 {
-    uint8_t ret_1, ret_2; 
+    uint8_t ret_1, ret_2;
     const report *p_report = app_report_get();
     if (p_report->order == 0x00) { // 先上报事件,再上报绑定信息
         ret_1 = PLCP_eventReport(eventSE, eventAEI, eventID, eventValue, eventType, REPORT_TARGET_RES);

@@ -217,7 +217,12 @@ bool switch_adapter_kj_mode_table_read(uint8_t *kj_mode_table, uint8_t len)
     for (uint8_t i = 0; i < len; i++) {
         if (kj_mode_table[i] == 0xFF) {
             if (i < KEY_NUMBER) {
+
+#if defined DEFAUTL_CURTAIN_PANEL
+                kj_mode_table[i] = CURTAIN_e; // 设置为"窗帘按键"
+#else
                 kj_mode_table[i] = SCENE_e; // 默认设置为"场景按键"
+#endif
             }
         }
     }

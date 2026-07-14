@@ -15,6 +15,15 @@
 #include "../Source/usart/usart.h"
 #include "../Source/watchdog/watchdog.h"
 
+static void app_gpio_fast_high(void)
+{
+    rcu_periph_clock_enable(RCU_GPIOB);
+
+    gpio_bit_set(GPIOB, GPIO_PIN_0);
+    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_PIN_0);
+    gpio_output_options_set(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);
+}
+
 static void app_board_bootstrap(void)
 {
     systick_config();
@@ -47,6 +56,9 @@ static void app_main_loop(void)
 
 int main(void)
 {
+#if defined PLCP_LIGHT_CT
+    app_gpio_fast_high();
+#endif
     app_board_bootstrap();
     app_core_services_init();
     app_device_init();

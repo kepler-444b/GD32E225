@@ -58,7 +58,7 @@ typedef enum {
 typedef struct
 {
     uint16_t sceneId;           // 场景号
-    uint8_t scenePower[16];     // 进入场景数据，可根据设备实际的场景数据做扩展
+    uint8_t scenePower[16];     // 进入场景数据,可根据设备实际的场景数据做扩展
     uint8_t quitscenePower[16]; // 退出场景数据
 } sDevice_Scene;
 

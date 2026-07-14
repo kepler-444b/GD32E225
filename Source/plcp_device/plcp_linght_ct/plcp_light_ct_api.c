@@ -26,15 +26,24 @@ void light_api_button_event_handler(uint8_t id, uint8_t event) // 0:release 1:pr
     if (id >= KEY_NUMBER) {
         return;
     }
-    if (night_scene_state_get() == 1) { // 夜灯模式
-        APP_PRINTF("send close\n");
-        night_scene_off_send(); // 关闭夜景
-        return;
+    for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
+        if (night_scene_state_get(i) == 0x01) { // 如果当前处于某个夜灯的"夜灯模式"
+            night_scene_off_send(i);            // 发送该夜灯的关闭夜景
+            return;
+        }
+        if (night_scene_state_get(i) == 0x02) { // 如果当前处于某个夜灯的"即将进入夜灯模式"
+            delay_scene_stop(i);                // 则打断延时执行夜灯模式
+        }
     }
-    if (night_scene_state_get() == 2) { // 即将进入夜灯模式
-        APP_PRINTF("stop close\n");
-        delay_scene_stop(); // 停止延时场景任务
-    }
+    // if (night_scene_state_get() == 1) { // 夜灯模式
+    //     APP_PRINTF("send close\n");
+    //     night_scene_off_send(); // 关闭夜景
+    //     return;
+    // }
+    // if (night_scene_state_get() == 2) { // 即将进入夜灯模式
+    //     APP_PRINTF("stop close\n");
+    //     delay_scene_stop(); // 停止延时场景任务
+    // }
 
     if (event == 0) {
         static char eventAEI[3];

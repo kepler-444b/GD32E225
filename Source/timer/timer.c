@@ -54,8 +54,10 @@ void app_timer_init(void)
         my_soft_timer[i].name[0] = '\0';
     }
     timer_parameter_struct timer_initpara;
-    rcu_periph_clock_enable(RCU_TIMER14); // 开启 TIMER14 时钟
-    timer_deinit(TIMER14);                // 复位 TIMER14 时钟
+    rcu_periph_clock_enable(RCU_TIMER14);    // 开启 TIMER14 时钟
+    timer_deinit(TIMER14);                   // 复位 TIMER14 时钟
+    timer_struct_para_init(&timer_initpara); // 使用默认值初始化该结构体
+
     // 配置定时器为1ms中断
     timer_initpara.prescaler = (SYSTEM_CLOCK_FREQ / 1000000) - 1; // 分频到1KHz
     timer_initpara.alignedmode = TIMER_COUNTER_EDGE;
@@ -67,7 +69,7 @@ void app_timer_init(void)
     timer_interrupt_flag_clear(TIMER14, TIMER_INT_FLAG_UP);
     timer_interrupt_enable(TIMER14, TIMER_INT_UP);
     timer_enable(TIMER14);
-    nvic_irq_enable(TIMER14_IRQn, 0); // 配置NVIC,优先级1
+    nvic_irq_enable(TIMER14_IRQn, 1); // 配置NVIC,优先级1
 }
 
 void TIMER14_IRQHandler(void)
