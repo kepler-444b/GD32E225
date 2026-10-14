@@ -12,8 +12,10 @@ const char product_str[] =
     "\"ver\":\"1.0\","
 #if defined PANEL_6KEY
     "\"name\":\"6key_panel\","
+    "\"type\":\"Switch/Key-6\","
 #elif defined PANEL_4KEY
     "\"name\":\"4key_panel\","
+    "\"type\":\"Switch/Key-4\","
 #endif
     "\"model\":\"PLCP_Panel\","
     "\"pid\":\"annogytd\","
@@ -40,15 +42,6 @@ char ae_str[] =
     "\"id\":\"PLCP_Panel_switch\","
     "\"url\":\"https://wowoja.cn/oss/panel/lme/PLCP_Panel_switch/v1.0/index.html\""
     "}"
-    "},"
-    "{\"ae\":[\"ch_1\",\"ch_2\",\"ch_3\",\"ch_4\"],"
-    "\"name\":\"relay\","
-    "\"se\":\"0\","
-    "\"panel\":{"
-    "\"id\":\"PLCP_Relay\","
-    "\"url\":\"https://wowoja.cn/oss/panel/lme/PLCP_Relay/v1.0/index.html\""
-    "},"
-    "\"active\":\"1\""
     "}"
     "]}";
 #elif defined PLCP_LIGHT_CT
@@ -128,9 +121,10 @@ uint8_t PlcSdkCallbackOnOff(char *aei, uint8_t OnOff)
         // return attr_led_table_set(id, OnOff);
         return attr_key_state_table_set(id, OnOff);
     } else {
+        APP_PRINTF("null\n");
         for (uint8_t i = 0; i < KEY_NUMBER; i++) {
-            attr_relay_table_set(i, OnOff);
-            switch_led_b_ctrl(i, OnOff, 0);
+            attr_key_state_table_set(i, OnOff);
+            // switch_led_b_ctrl(i, OnOff, 0);
         }
         return 0;
     }

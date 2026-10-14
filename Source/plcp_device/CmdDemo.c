@@ -1,6 +1,6 @@
 
 #include "../../Source/device/device_manager.h"
- 
+
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/usart/usart.h"
 #include "../Source/plcp_device/APP_PublicAttribute.h"
@@ -340,12 +340,12 @@ void CmdTest_MSE_Apply_net(uint8_t type, uint8_t def)
     unsigned short val = 1111 & 0xFFFF;
     unsigned short swapped = ((val & 0xFF) << 8) | ((val >> 8) & 0xFF);
 
-    u8 selfMacAddr[6];
+    uint8_t selfMacAddr[6];
     memcpy(selfMacAddr, pAttributeOfAPP->selfMacAddr, sizeof(selfMacAddr));
     //        mac       产品类型   属性
     // len,0,1,2,3,4,5    ,xx,       1,      ,
-    u8 date[10] = {
-        0x8,
+    uint8_t date[10] = {
+        0x08,
         selfMacAddr[0],
         selfMacAddr[1],
         selfMacAddr[2],
@@ -355,6 +355,7 @@ void CmdTest_MSE_Apply_net(uint8_t type, uint8_t def)
         type,
         def,
     }; // 假设设置的模式数据为1,2.
+    APP_PRINTF_BUF("data", date, 10);
 
     snprintf(rsi, sizeof(rsi), "%04x@SE198.FFFFFFFFFFFF/_SET", swapped);
 
@@ -370,6 +371,7 @@ void CmdTest_MSE_Apply_net(uint8_t type, uint8_t def)
     uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
 
     app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
+    APP_PRINTF_BUF("", uartSendBuff, uartSendBuffLen);
 }
 
 /*--------------------------------------------------------------
@@ -420,4 +422,3 @@ void CmdTest_MSE_McuVer(void)
     uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, 100);
     MCU_Send_date(uartSendBuff, uartSendBuffLen);
 }
- 

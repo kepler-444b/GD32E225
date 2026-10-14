@@ -3,6 +3,7 @@
 #include "../../Source/base/base.h"
 #include "../../Source/base/debug.h"
 #include "../../Source/device/device_manager.h"
+#include "../../Source/eventbus/eventbus.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../../Source/plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/plcp_device/plcp_panel/panel_adapter.h"
@@ -10,6 +11,7 @@
 #include "../../Source/plcp_device/plcp_panel/plcp_panel_info.h"
 #include "../../Source/pwm/pwm_hw.h"
 #include "../../Source/timer/timer.h"
+#include "systick.h"
 
 #if defined PLCP_PANEL
 
@@ -51,15 +53,17 @@ static panel_status_t my_panel_status[KEY_NUMBER] = {
 
 static common_panel_t my_common_panel;
 static adc_value_t my_adc_value;
-static volatile uint16_t timer_5s_count;
-static volatile uint16_t timer_1s_count;
-static volatile uint16_t timer_2s_count;
-static volatile uint16_t timer_3s_count;
+static volatile uint16_t timer_5s_count = 300;
+static volatile uint16_t timer_1s_count = 0;
+static volatile uint16_t timer_2s_count = 100;
 
 static void read_adc_value(void *arg);
 static void plcp_panel_tast(void *arg);
 static void process_message_queue(void *arg);
+static void plcp_panel_event(event_type_e event, void *params);
 static void plcp_panel_blink(bool status);
+static void plcp_panel_blink_bled(bool status);
+static void plcp_panel_key_status(bool status);
 static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, adc_value_t *adc_value);
 
 // 向前声明
@@ -75,6 +79,8 @@ static bool get_my_mac = false;
 static bool join_net = false;
 static bool led_blink = false;
 static uint16_t led_blink_count = 0;
+
+// #define PLCP_FACTORY // plcp 恢复出厂设置
 
 void plcp_panel_init(void)
 {
@@ -98,11 +104,16 @@ void plcp_panel_init(void)
     app_timer_start(5, read_adc_value, true, NULL, "read_adc");              // adc 检测
     app_timer_start(10, plcp_panel_tast, true, NULL, "task");                // 初始化状态机
     app_timer_start(50, process_message_queue, true, NULL, "message_queue"); // 消息队列
+    app_eventbus_subscribe(plcp_panel_event);
 
     APP_PRINTF("plcp_panel_init\n");
     APP_PLCSDK_Init();
     sPost_flag = APP_Postflag_GetPointer();
     CmdTest_MSE_McuVer();
+    plcp_panel_key_status(false);
+
+    attr_led_state_table_recover(); // 读取LED控制状态
+    attr_kj_mode_table_recover();   // 读取按键模式
 }
 
 static void read_adc_value(void *arg)
@@ -113,6 +124,7 @@ static void read_adc_value(void *arg)
 
 static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, adc_value_t *adc_value)
 {
+    // APP_PRINTF("valeu:%d\n", adc_value->vol);
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
         panel_status_t *p_status = &temp_status[i];
         if (adc_value->vol < p_status->vol_range.min || adc_value->vol > p_status->vol_range.max) {
@@ -135,23 +147,24 @@ static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, a
         }
         if (!p_status->k_press) { // 处理按键按下
             p_status->k_press = true;
+
             switch_api_button_event_handler(i, 0); // 固定为 按下后松开
 
-#if 0 // 原来的短按3次,再长按5s
+#if defined PLCP_FACTORY
 
             if (i == 0) {
                 temp_common->key_short_count++;
                 temp_common->key_short_timerout = 0;
                 APP_PRINTF("key_short_count:%d\n", temp_common->key_short_count);
             }
-#endif
+#else
             temp_common->key_long_press = true;
-
+#endif
             return;
         }
     }
 
-#if 0 // 原来的短按3次,再长按5s
+#if defined PLCP_FACTORY
 
     if (temp_common->key_short_count != 0) {
         temp_common->key_short_timerout++;
@@ -168,12 +181,34 @@ static void read_adc(panel_status_t *temp_status, common_panel_t *temp_common, a
     // 处理长按
     if (temp_common->key_long_press && ++temp_common->key_long_count >= LONG_PRESS) {
         temp_common->key_long_press = false;
-        // MCU_Device_Factory();
+
+#if defined PLCP_FACTORY
+        led_blink = true;
+        CmdTest_MSE_Factory();
+#else
         CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER);
-        APP_PRINTF("CmdTest_MSE_Apply_net\n");
+#endif
+
+        // MCU_Device_Factory();
+        // CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER);
+        // APP_PRINTF("CmdTest_MSE_Apply_net\n");
     }
 }
 
+static void plcp_panel_event(event_type_e event, void *params)
+{
+    switch (event) {
+    case EVENT_NETWORK_SUCC:
+        led_blink = true;
+        APP_PRINTF("EVENT_NETWORK_SUCC\n");
+        // plcp_panel_blink_bled(false);
+        // // delay_1ms(100);
+        // plcp_panel_blink_bled(true);
+        break;
+    default:
+        break;
+    }
+}
 static void process_message_queue(void *arg)
 {
     APP_Queue_ListenAndHandleMessage();
@@ -182,6 +217,7 @@ static void process_message_queue(void *arg)
 // 面板初始化状态机
 static void plcp_panel_tast(void *arg)
 {
+    // static uint16_t timer_5s_count = 500;
     timer_5s_count++;
 
     if (timer_5s_count >= 500) { // 5s 写产品信息
@@ -232,14 +268,16 @@ static void plcp_panel_tast(void *arg)
         }
     }
     if (get_my_mac == true) {
+
         timer_2s_count++;
         if (timer_2s_count >= 200) {
+
             timer_2s_count = 0;
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
             if (APP_Attribute_GetPointer()->did != 0x0000) {
-                if (join_net == false) {     // 由未入网变为入网
-                    plcp_panel_blink(false); // 关闭所有指示灯
+                if (join_net == false) { // 由未入网变为入网
+                    // plcp_panel_blink(false); // 关闭所有指示灯
                     switch_api_init();
                     join_net = true;
                 }
@@ -251,12 +289,54 @@ static void plcp_panel_tast(void *arg)
         }
     }
     if (join_net == false) {
+#if 0 // 不再闪烁
         led_blink_count++;
         if (led_blink_count >= 100) {
             led_blink_count = 0;
             led_blink = !led_blink;
             plcp_panel_blink(led_blink);
         }
+#endif
+    }
+
+    if (led_blink) { // 背光灯闪烁
+        led_blink_count++;
+
+#if defined PLCP_FACTORY
+        if (led_blink_count == 1) {
+            plcp_panel_blink_bled(false); // 灭
+        }
+        if (led_blink_count == 50) {     // 每10次执行一次
+            plcp_panel_blink_bled(true); // 亮
+        }
+        if (led_blink_count == 100) {     // 每20次执行一次
+            plcp_panel_blink_bled(false); // 灭
+        }
+        if (led_blink_count >= 150) {
+            plcp_panel_blink_bled(true);
+        }
+        if (led_blink_count >= 200) {
+            led_blink_count = 0;
+            plcp_panel_blink_bled(false);
+            led_blink = false;
+            NVIC_SystemReset();
+        }
+#else
+        if (led_blink_count == 1) {
+            plcp_panel_blink_bled(false); // 灭
+        }
+        if (led_blink_count == 20) {     // 每10次执行一次
+            plcp_panel_blink_bled(true); // 亮
+        }
+        if (led_blink_count == 40) {      // 每20次执行一次
+            plcp_panel_blink_bled(false); // 灭
+        }
+        if (led_blink_count >= 60) { // 总共闪3次
+            led_blink_count = 0;
+            led_blink = false;
+            plcp_panel_blink_bled(true);
+        }
+#endif
     }
 }
 
@@ -265,6 +345,25 @@ static void plcp_panel_blink(bool status)
 {
     for (uint8_t i = 0; i < KEY_NUMBER; i++) {
         switch_led_ctrl(i, status);
+    }
+}
+
+// 背光灯闪烁
+static void plcp_panel_blink_bled(bool status)
+{
+    // const plcp_panel_pin_t *p_pins = get_panel_pins();
+
+    for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+        switch_led_b_ctrl(i, status ? 100 : 0, 0);
+
+        // pwm_hw_set_duty(get_panel_pins()->led_w_pin[i], status ? 1000 : 0);
+    }
+}
+
+static void plcp_panel_key_status(bool status)
+{
+    for (uint8_t i = 0; i < KEY_NUMBER; i++) {
+        attr_key_state_table_set(i, status);
     }
 }
 

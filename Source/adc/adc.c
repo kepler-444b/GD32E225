@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include "adc.h"
-#include "gd32e23x.h"
 #include "../base/debug.h"
+#include "gd32e23x.h"
+#include <stdio.h>
 
 // 函数声明
 static void rcu_config(void);
@@ -34,15 +34,15 @@ static void dma_config(adc_channel_t *channel_num)
     dma_parameter_struct dma_data_parameter;
     dma_deinit(DMA_CH0);
 
-    dma_data_parameter.periph_addr  = (uint32_t)(&ADC_RDATA);
-    dma_data_parameter.periph_inc   = DMA_PERIPH_INCREASE_DISABLE;
-    dma_data_parameter.memory_addr  = (uint32_t)(&adc_value);
-    dma_data_parameter.memory_inc   = DMA_MEMORY_INCREASE_ENABLE;
+    dma_data_parameter.periph_addr = (uint32_t)(&ADC_RDATA);
+    dma_data_parameter.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
+    dma_data_parameter.memory_addr = (uint32_t)(&adc_value);
+    dma_data_parameter.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
     dma_data_parameter.periph_width = DMA_PERIPHERAL_WIDTH_16BIT;
     dma_data_parameter.memory_width = DMA_MEMORY_WIDTH_16BIT;
-    dma_data_parameter.direction    = DMA_PERIPHERAL_TO_MEMORY;
-    dma_data_parameter.number       = active_channels; // 使用实际通道数量
-    dma_data_parameter.priority     = DMA_PRIORITY_HIGH;
+    dma_data_parameter.direction = DMA_PERIPHERAL_TO_MEMORY;
+    dma_data_parameter.number = active_channels; // 使用实际通道数量
+    dma_data_parameter.priority = DMA_PRIORITY_HIGH;
 
     dma_init(DMA_CH0, &dma_data_parameter);
 

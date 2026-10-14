@@ -67,9 +67,7 @@ bool report_type_read(report *report);
 
 bool switch_adapter_delay_table_read(uint8_t *delay_table);
 void switch_relay_ctrl(uint8_t id, uint8_t connect);
-void switch_adapter_led_bk_ctrl(uint8_t id, uint8_t onoff);
 void switch_led_ctrl(uint8_t id, uint8_t onoff);
-void switch_adapter_led_b_ctrl(uint8_t id, uint8_t onoff);
 void switch_led_b_ctrl(uint8_t id, uint8_t lum, uint8_t duration_ms);
 
 #endif

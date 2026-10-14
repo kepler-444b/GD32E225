@@ -42,11 +42,13 @@
     [0] = {.vol_range = {0, 10}},    \
     [1] = {.vol_range = {25, 40}},   \
     [2] = {.vol_range = {145, 155}}, \
-    [3] = {.vol_range = {88, 95}}
+    [3] = {.vol_range = {88, 95}},   \
+    [4] = {.vol_range = {200, 210}}, \
+    [5] = {.vol_range = {240, 250}}
 
-#define RELAY_GPIO_MAP_DEF {PB14, PB13, PB12, PB15}             // 继电器 GPIO 映射
-#define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB7, PWM_PB6} // LED 白灯 GPIO
-#define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB5, PB4}                // LED 黄灯 GPIO
+#define RELAY_GPIO_MAP_DEF {PB14, PB13, PB12, PB15}                               // 继电器 GPIO 映射
+#define LED_W_GPIO_MAP_DEF {PWM_PB0, PWM_PB1, PWM_PB7, PWM_PB6, PWM_PA6, PWM_PA7} // LED 白灯 GPIO
+#define LED_Y_GPIO_MAP_DEF {PA15, PB3, PB5, PB4, PA1, PA4}                        // LED 黄灯 GPIO
 
 #endif // PANEL_TD
 #endif // PANEL_4KEY

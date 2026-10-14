@@ -218,7 +218,7 @@ bool switch_adapter_kj_mode_table_read(uint8_t *kj_mode_table, uint8_t len)
         if (kj_mode_table[i] == 0xFF) {
             if (i < KEY_NUMBER) {
 
-#if defined DEFAUTL_CURTAIN_PANEL
+#if defined DEFAUTL_CURTAIN_PANEL || defined DEFAUTL_CURTAIN_PANEL_MIRR || defined DEFAUTL_CURTAIN_LIVING_PANEL
                 kj_mode_table[i] = CURTAIN_e; // 设置为"窗帘按键"
 #else
                 kj_mode_table[i] = SCENE_e; // 默认设置为"场景按键"
@@ -316,6 +316,5 @@ void switch_led_ctrl(uint8_t id, uint8_t onoff)
 void switch_led_b_ctrl(uint8_t id, uint8_t lum, uint8_t duration_ms)
 {
     const plcp_panel_pin_t *p_pins = get_panel_pins();
-
     app_set_pwm_hw_fade(get_panel_pins()->led_w_pin[id], lum * 10, duration_ms * 100);
 }

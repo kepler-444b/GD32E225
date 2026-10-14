@@ -17,7 +17,7 @@ static uint8_t delay_scene_active_timer = 0xff;
 static void (*delay_scene_active_handler_fun)(void) = NULL;
 
 static DelayScene_t my_DelayScene[NIGHT_SCENE_MAX] = {0};
-static NightScene_t my_NightScene[5] = {0};
+static NightScene_t my_NightScene[NIGHT_SCENE_MAX] = {0};
 
 uint8_t special_scene_set(uint8_t *data, uint8_t len)
 {
@@ -35,7 +35,7 @@ uint8_t special_scene_set(uint8_t *data, uint8_t len)
         memcpy((uint8_t *)&my_DelayScene[0].scene_id, &data[4], 2);
         memcpy((uint8_t *)&my_DelayScene[0].scene_timer, &data[6], 2);
 
-        APP_PRINTF("enable:%d my_DelayScene[i].scene_id:%04X my_DelayScene[i].scene_timer:%04X\n", my_DelayScene[0].enable, my_DelayScene[0].scene_id, my_DelayScene[0].scene_timer);
+        // APP_PRINTF("enable:%d my_DelayScene[i].scene_id:%04X my_DelayScene[i].scene_timer:%04X\n", my_DelayScene[0].enable, my_DelayScene[0].scene_id, my_DelayScene[0].scene_timer);
 
         if (APP_SaveDelaySceneParameter() != FMC_READY) {
             APP_PRINTF("APP_SaveDelaySceneParameter error\n");
@@ -46,10 +46,10 @@ uint8_t special_scene_set(uint8_t *data, uint8_t len)
         my_NightScene[delay_insert].night_scene_current = 0;
         memcpy((uint8_t *)&my_NightScene[delay_insert].open_night, &data[9], 2);
         memcpy((uint8_t *)&my_NightScene[delay_insert].close_night, &data[11], 2);
-
         if (APP_SaveNightSceneParameter() != FMC_READY) {
             APP_PRINTF("APP_SaveNightSceneParameter error\n");
         }
+        APP_ReadNightSceneParameter();
     }
     return 1;
 }
@@ -177,12 +177,12 @@ void night_scene_open(uint8_t night_num)
 #if defined PLCP_PANEL
     attr_key_state_table_recover(); // 恢复按键状态
     app_timer_stop("night_delay");
-    app_timer_start(10000, night_delay, false, &s_night_num, "night_delay");
+    app_timer_start(9500, night_delay, false, &s_night_num, "night_delay");
 
 #elif defined PLCP_LIGHT_CT
     attr_light_ct_table_set(false); // 关闭灯
     app_timer_stop("night_delay");
-    app_timer_start(10000, night_delay, false, &s_night_num, "night_delay");
+    app_timer_start(9500, night_delay, false, &s_night_num, "night_delay");
 #endif
 }
 
@@ -278,8 +278,42 @@ fmc_state_enum APP_ReadNightSceneParameter(void)
 
 void APP_SpecialSceneClr(void)
 {
-    memset(&my_DelayScene, 0xFF, sizeof(my_DelayScene));
-    memset(&my_NightScene, 0xFF, sizeof(my_NightScene));
+    memset(&my_DelayScene, 0x00, sizeof(my_DelayScene));
+    memset(&my_NightScene, 0x00, sizeof(my_NightScene));
     APP_SaveNightSceneParameter();
     APP_SaveDelaySceneParameter();
+}
+
+bool APP_SpcialSceneCheck(uint16_t sceneId, uint8_t *respondCode)
+{
+    const NightScene_t *temp = night_scene_info_get();
+    for (uint8_t j = 0; j < NIGHT_SCENE_MAX; j++) { // 轮询5个夜灯场景
+        if (temp[j].night_enable == 0x01) {         // 检索已使能的夜灯场景
+
+            if (night_scene_state_get(j) == 0x02) { // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
+                delay_scene_stop(j);
+            }
+            if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
+
+                if (sceneId == temp[j].open_night) { // 是否是当前夜灯模式的场景号
+                    night_scene_close(j);
+                    *respondCode = UAPPS_ACK_CHANGED;
+                    break;
+                } else { // 其他场景试图唤醒面板
+                    *respondCode = UAPPS_ACK_CHANGED;
+                    return false;
+                }
+            }
+        }
+    }
+
+    for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
+        if (temp[i].night_enable == 0x01) { // 夜灯场景是否使能
+            if (sceneId == temp[i].open_night) {
+                night_scene_open(i); // 开启某个夜灯场景
+                *respondCode = UAPPS_ACK_CHANGED;
+            }
+        }
+    }
+    return true;
 }

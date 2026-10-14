@@ -17,6 +17,11 @@ void plcp_light_ct_pins_init(void)
     light_ct_pins.led_y = PWM_PB0;
     light_ct_pins.led_w = PWM_PB1;
 
+    // 继电器引脚
+
+    gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_12);
+    gpio_output_options_set(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_12);
+
     // 干接点中断触发引脚
     rcu_periph_clock_enable(RCU_GPIOA);
     gpio_mode_set(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_0); // 上拉

@@ -58,4 +58,6 @@ fmc_state_enum APP_ReadNightSceneParameter(void);
 fmc_state_enum APP_SaveNightSceneParameter(void);
 void APP_SpecialSceneClr(void);
 
+bool APP_SpcialSceneCheck(uint16_t sceneId, uint8_t *respondCode); 
+
 #endif

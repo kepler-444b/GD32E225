@@ -1,6 +1,7 @@
 #include "plcp_panel_api.h"
 #include "../../Source/base/debug.h"
 #include "../../Source/device/device_manager.h"
+#include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../../Source/plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/plcp_device/plcp_panel/plcp_panel_info.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_bind.h"
@@ -29,8 +30,8 @@ void switch_api_init(void)
     // relay_powe_up_table_init(); // 执行上电状态
     // led_table_init();
 
-    attr_led_state_table_recover(); // 读取LED控制状态
-    attr_kj_mode_table_recover();   // 读取按键模式
+    // attr_led_state_table_recover(); // 读取LED控制状态
+    // attr_kj_mode_table_recover();   // 读取按键模式
 
     APP_ReadBindParameter(); // 读取绑定信息
 
@@ -91,21 +92,24 @@ void switch_api_button_event_handler(uint8_t id, uint8_t event) // 0:release 1:p
         memset(eventAEI, 0, sizeof(eventAEI));
         memset(eventType, 0, sizeof(eventType));
 
-        snprintf(eventAEI, 3, "k%d", id + 1);        // 构造 AEI
+        snprintf(eventAEI, 3, "k%d", id + 1); // 构造 AEI
+        const sPublic_attribute *pAttributeOfAPP = APP_Attribute_GetPointer();
+
         if (attr_kj_mode_table_get(id) == SCENE_e) { // 场景模式
 
             keyState = !attr_key_state_table_get(id); // 获取当前按键的状态
 
-            APP_SET_GPIO(get_panel_pins()->led_y_pin[id], true);
-            delay_1ms(100);
-            APP_SET_GPIO(get_panel_pins()->led_y_pin[id], false);
-            delay_1ms(100);
-            APP_SET_GPIO(get_panel_pins()->led_y_pin[id], !keyState); // 恢复到原来的状态
-
+            if (pAttributeOfAPP->did == 0x0000) {
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], true);
+                delay_1ms(100);
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], false);
+                delay_1ms(100);
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], !keyState); // 恢复到原来的状态
+                return;
+            }
             strcpy(eventType, EVENT_TYPE_SCENE); // 标记事件为"scene",后续上报
 
         } else if (attr_kj_mode_table_get(id) == SWITCH_e) { // 开关模式
-            APP_PRINTF("SWITCH_e\n");
 
             keyState = !attr_key_state_table_get(id);
             attr_key_state_table_set(id, keyState);
@@ -123,8 +127,16 @@ void switch_api_button_event_handler(uint8_t id, uint8_t event) // 0:release 1:p
             if (app_timer_is_active("curtain_hold") == false) {
                 APP_Curtain_timer();
             }
-
             keyState = !attr_key_state_table_get(id);
+
+            if (pAttributeOfAPP->did == 0x0000) {
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], true);
+                delay_1ms(100);
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], false);
+                delay_1ms(100);
+                APP_SET_GPIO(get_panel_pins()->led_y_pin[id], !keyState); // 恢复到原来的状态
+                return;
+            }
             const curtain_t *curtain = APP_GetCurtain(id);
             if (curtain->is_exe == true) {
                 keyState = KEY_STATE_STOP;

@@ -1,5 +1,5 @@
 #include "../../Source/device/device_manager.h"
- 
+
 #include "../../Source/cJSON/cJSON.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../base/debug.h"
@@ -243,8 +243,6 @@ void PLCP_Load_Product(char *product)
 
 void CmdTest_MSE_Load_Product(char *CompanyName, char *model, char *PID)
 {
-#if 1
-
     memset(rsi, 0, sizeof(rsi));
     memset(uartSendBuff, 0, sizeof(uartSendBuff));
     memset(&testCoap, 0, sizeof(UappsMessage));
@@ -283,183 +281,8 @@ void CmdTest_MSE_Load_Product(char *CompanyName, char *model, char *PID)
 
     uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, sizeof(uartSendBuff));
     MCU_Send_date(uartSendBuff, uartSendBuffLen);
-    // app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
-#else
-    UappsMessage testCoap;
-    char rsi[50];
-    uint8_t uartSendBuff[256];
-    u16 uartSendBuffLen = 0;
-    uint8_t productInit[250];
-    memset(rsi, 0, sizeof(rsi));
-    memset(uartSendBuff, 0, sizeof(uartSendBuff));
-    memset(&testCoap, 0, sizeof(UappsMessage));
-    memset(productInit, 0, sizeof(productInit));
-
-    printf("enter Load_Product\n");
-
-    sprintf(rsi, "@SE1./_load");
-    cJSON *product = cJSON_CreateObject();
-    cJSON *root = cJSON_CreateObject();
-    cJSON *vendor = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(root, "ver", PRODUCT_FORMAT_VERSION);
-    cJSON_AddStringToObject(root, "name", CompanyName);
-    cJSON_AddStringToObject(root, "model", model);
-    cJSON_AddStringToObject(root, "pid", PID);
-    cJSON_AddStringToObject(root, "license", "1234");
-
-    cJSON_AddStringToObject(vendor, "name", "Name");
-    cJSON_AddItemToObject(root, "vendor", vendor);
-    cJSON_AddItemToObject(product, "product", root);
-
-    char *pJsonStr = cJSON_PrintUnformatted(product);
-
-    size_t json_len = strlen(pJsonStr);
-    if (json_len + 19 >= sizeof(productInit)) {
-        printf("[Error] JSON too large! length=%d\n", (int)json_len);
-        free(pJsonStr);        // 先释放 JSON 字符串
-        cJSON_Delete(product); // 再释放 JSON 对象
-        return;
-    }
-    Add_device_information_Description(productInit, 0x06, (uint8_t *)pJsonStr, json_len);
-    memcpy(&productInit[19], (uint8_t *)pJsonStr, json_len);
-
-    UappsPutData(&testCoap, productInit, json_len + 19, UAPPS_FMT_OCTETS, 0); // 加入载荷
-    UappsCreateMessage(&testCoap, UAPPS_TYPE_CON, UAPPS_REQ_PUT, rsi);
-    testCoap.token[0] = 0x52;
-    testCoap.token[1] = MSE_Load_Product;
-
-    free(pJsonStr);
-    cJSON_Delete(product);
-
-    uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, sizeof(uartSendBuff));
-
-    app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
-    MCU_Send_date(uartSendBuff, uartSendBuffLen);
-#endif
 }
 
-/*--------------------------------------------------------------
-函数名称：CmdTest_MSE_Load_AEInfo
-函数功能：构造可写入plc模组AE信息的接口函数
-输入参数：ae_num-ae列表的元素值；quantity- 元素个数；BrandName-品牌名, id-Panel类型，url-Panel地址
-返回值：   无
-备 注：
----------------------------------------------------------------*/
-#if 0
-void CmdTest_MSE_Load_AEInfoMulti(const AE_Info_t *ae_infos, uint8_t ae_count)
-{
-    if (!ae_infos || ae_count == 0) {
-        printf("[Error] AE info is NULL or count is 0!\n");
-        return;
-    }
-
-    memset(rsi, 0, sizeof(rsi));
-    memset(uartSendBuff, 0, sizeof(uartSendBuff));
-    memset(&testCoap, 0, sizeof(UappsMessage));
-    memset(productInit, 0, sizeof(productInit));
-
-    printf("enter Load_AEInfoOneByOneStable\n");
-    sprintf(rsi, "@SE1./_load");
-
-    for (uint8_t i = 0; i < ae_count; i++) {
-        const AE_Info_t *info = &ae_infos[i];
-
-        // 打印调试
-        printf("[Debug] AE index %d: name=%s, se=%s, panel_id=%s, panel_url=%s\n",
-               i,
-               info->name ? info->name : "NULL",
-               info->se ? info->se : "NULL",
-               info->panel_id ? info->panel_id : "NULL",
-               info->panel_url ? info->panel_url : "NULL");
-
-        // 检查 ae_num 每个元素是否为 NULL
-        for (uint8_t j = 0; j < info->quantity; j++) {
-            if (!info->ae_num[j]) {
-                printf("[Warning] ae_num[%d] is NULL, replaced with empty string\n", j);
-                ((const char **)info->ae_num)[j] = "";
-            }
-        }
-
-        // 创建 root 和 AE_List
-        cJSON *root = cJSON_CreateObject();
-        if (!root) {
-            printf("[Error] Failed to create root JSON for AE index %d\n", i);
-            continue;
-        }
-
-        cJSON *AE_List = cJSON_CreateArray();
-        if (!AE_List) {
-            printf("[Error] Failed to create AE list for AE index %d\n", i);
-            cJSON_Delete(root);
-            continue;
-        }
-
-        cJSON_AddItemToObject(root, "AE", AE_List);
-
-        // 创建 AE 对象
-        cJSON *AE_Info   = cJSON_CreateObject();
-        cJSON *Panel     = cJSON_CreateObject();
-        cJSON *AE_Number = cJSON_CreateStringArray(info->ae_num, info->quantity);
-
-        if (!AE_Info || !Panel || !AE_Number) {
-            printf("[Error] Failed to create AE objects for index %d\n", i);
-            cJSON_Delete(root);
-            continue;
-        }
-
-        // 自动处理 NULL 或空格
-        cJSON_AddItemToObject(AE_Info, "ae", AE_Number);
-        cJSON_AddStringToObject(AE_Info, "name", info->name ? info->name : "");
-        cJSON_AddStringToObject(AE_Info, "se", info->se ? info->se : "0");
-        cJSON_AddItemToObject(AE_Info, "panel", Panel);
-        cJSON_AddStringToObject(Panel, "id", info->panel_id ? info->panel_id : "");
-
-        // 去掉 panel_url 尾部空格
-        char panel_url_clean[128] = {0};
-        if (info->panel_url) {
-            size_t len = strlen(info->panel_url);
-            while (len > 0 && (info->panel_url[len - 1] == ' ' || info->panel_url[len - 1] == '\t')) len--;
-            strncpy(panel_url_clean, info->panel_url, len);
-            panel_url_clean[len] = '\0';
-        }
-        cJSON_AddStringToObject(Panel, "url", panel_url_clean);
-
-        cJSON_AddItemToArray(AE_List, AE_Info);
-
-        // 打印调试 JSON
-        char *pJsonStr = cJSON_PrintUnformatted(root);
-        if (!pJsonStr) {
-            printf("[Error] Failed to print JSON for AE index %d\n", i);
-            cJSON_Delete(root);
-            continue;
-        }
-
-        printf("[Debug] AE index %d JSON: %s\n", i, pJsonStr);
-
-        // 发送
-        Add_device_information_Description(productInit, 0x04, (uint8_t *)pJsonStr, strlen(pJsonStr));
-        memcpy(&productInit[19], pJsonStr, strlen(pJsonStr));
-
-        UappsPutData(&testCoap, productInit, strlen(pJsonStr) + 19, UAPPS_FMT_OCTETS, 0);
-        UappsCreateMessage(&testCoap, UAPPS_TYPE_CON, UAPPS_REQ_PUT, rsi);
-        testCoap.token[0] = 0x52;
-        testCoap.token[1] = MSE_Load_AE;
-
-        uartSendBuffLen = Aps_UartMessage(&testCoap, uartSendBuff, sizeof(uartSendBuff));
-        if (uartSendBuffLen <= 0) {
-            printf("[Error] Failed to create UART message for AE index %d\n", i);
-        } else {
-            MCU_Send_date(uartSendBuff, uartSendBuffLen);
-            printf("[Info] JSON sent successfully for AE index %d, length=%d\n", i, uartSendBuffLen);
-        }
-
-        // 释放 JSON 内存
-        cJSON_Delete(root);
-        cJSON_free(pJsonStr);
-    }
-}
-#endif
 void PLCP_Load_AEInfo(char *root)
 {
     memset(rsi, 0, sizeof(rsi));
@@ -648,4 +471,3 @@ void CmdTest_MSE_Load_Widgets(const char *ae_num, uint8_t quantity)
     MCU_Send_date(uartSendBuff, uartSendBuffLen);
     // app_usart_tx_buf(uartSendBuff, uartSendBuffLen, USART0);
 }
- 

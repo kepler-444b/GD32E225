@@ -27,7 +27,7 @@ void light_adapter_ctrl(const light_ct_t *ctrl)
 }
 
 void light_adapter_close(uint8_t grad_time)
-{ 
+{
     app_set_pwm_hw_fade(PWM_PB0, 0, grad_time * 100); // 暖白 PB0
     app_set_pwm_hw_fade(PWM_PB1, 0, grad_time * 100); // 白光 PB1
 }
@@ -104,4 +104,10 @@ static void light_execute(const light_ct_t *ctrl)
         cool_pwm = PWM_MAX;
     app_set_pwm_hw_fade(PWM_PB0, warm_pwm, duration_ms);
     app_set_pwm_hw_fade(PWM_PB1, cool_pwm, duration_ms);
+
+    if (warm_pwm > 0) { // 继电器的状态与PWM同步
+        APP_SET_GPIO(PB12, true);
+    } else {
+        APP_SET_GPIO(PB12, false);
+    }
 }

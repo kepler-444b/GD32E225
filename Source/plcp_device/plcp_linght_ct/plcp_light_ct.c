@@ -38,12 +38,15 @@ static volatile bool key_pressed = false; //  按键已经被按下
 static uint16_t key_pressed_count = 0;
 
 static volatile bool key_press_pending = false; // 中断触发标记
-static uint16_t key_cooldown_count = 0;         // 按键冷却/节流计数器
+
+static uint8_t click_count = 0;         // 按下次数
+static uint16_t click_window_ticks = 0; // 3秒窗口倒计时 (300 * 10ms)
 
 void plcp_light_ct_init(void)
 {
     APP_PRINTF("plcp_light_ct_init\n");
     plcp_light_ct_pins_init();
+
     app_pwm_hw_init();
     app_pwm_hw_add_pin(PWM_PB0);
     app_pwm_hw_add_pin(PWM_PB1);
@@ -146,16 +149,28 @@ static void plcp_panel_task(void *arg)
         // }
     }
 
-    if (key_cooldown_count > 0) { // 按键冷却
-        key_cooldown_count--;     // 处于冷却期,计数器每10ms减1
+    if (click_window_ticks > 0) {
+        click_window_ticks--;
+    } else {
+        click_count = 0; // 超时清零
+        APP_PRINTF("clear\n");
     }
 
     // 中断触发
     if (key_press_pending) {
         key_press_pending = false; // 清除中断标记
+        light_api_button_event_handler(0, 0);
+        if (click_count == 0) {
+            click_window_ticks = 300; // 第一次按下，启动3秒倒计时(300 * 10ms)
+        }
 
-        if (key_cooldown_count == 0) { // 且当前不在冷却期内
-            light_api_button_event_handler(0, 0);
+        click_count++;
+        APP_PRINTF("Click count: %d\n", click_count);
+
+        if (click_count >= 5) {
+            click_count = 0;
+            click_window_ticks = 0;
+            CmdTest_MSE_Apply_net(DEV_TYPE, KEY_NUMBER); // 申请入网
         }
     }
 
@@ -177,8 +192,6 @@ void EXTI0_1_IRQHandler(void)
         // 读引脚电平,判断是上升沿还是下降沿触发
         if (RESET != gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 上升沿(按键抬起)
             key_pressed = false;
-            // key_pressed_count = 0;
-            // key_press_pending = true;
 
         } else if (RESET == gpio_input_bit_get(GPIOA, GPIO_PIN_0)) { // 下降沿(按键按下)
             key_pressed = true;

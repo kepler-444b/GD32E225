@@ -67,6 +67,42 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k4", "_close", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"}};
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
+#elif defined DEFAUTL_CURTAIN_LIVING_PANEL // 窗帘窗纱(客厅)
+
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1003@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1003@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1003@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1003@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1004@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1004@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1004@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1004@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_CURTAIN_PANEL_MIRR // 窗帘窗纱(镜像)
+
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1000@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_close\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_open\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1002@SE201.FFFFFFFFFFFF/_stop\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
 #elif defined DEFAUTL_DND_CLEAR_PANEL || defined DEFAUTL_DND_CLEAR_PANEL_JY // 勿扰 清理 卫浴 排气扇
     static const struct {
         const char *aei;
@@ -84,6 +120,39 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k4", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
+#elif defined DEFAUTL_DND_CLEAR_PANEL_DOOR // 勿扰 清理 卫浴灯 排气扇(入门4键开关)
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0005@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0005@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"1700@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_LIVING_SOFT_PANEL      // 客厅 客厅 柔光 柔光
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"2300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"2300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"2300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"2300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0006@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0006@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"0006@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"0006@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 #elif defined DEFAUTL_CLEAR_DND_TOILET_PANEL // 清理 勿扰 马桶间 排气扇
     static const struct {
         const char *aei;
@@ -117,6 +186,47 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k3", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
         {"k4", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
         {"k4", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_CLEAR_DND_PANEL_S20 // 勿扰 勿扰 清理 清理
+
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"0200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"0300@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_PORCH_FAN_PANEL_S20 // 廊灯 排气扇 卫浴
+
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k5", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k5", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+    };
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
 #elif defined DEFAUTL_ALL_OPEN_ALL_CLOSE // 全开 全关 马桶间 排气扇
@@ -175,6 +285,27 @@ fmc_state_enum APP_ReadBindParameter(void)
 
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
+#elif defined DEFAUTL_BALCONY_LIGHT_PANEL // 阳台灯
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k5", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k5", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"2200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 #elif defined DEFAUTL_ALL_OPEN_BATH_PANEL
     static const struct {
         const char *aei;
@@ -182,14 +313,19 @@ fmc_state_enum APP_ReadBindParameter(void)
         const char *msg;
     } default_configs[] = {
 
-        {"k1", "_open", "{\"rsl\":\"0001@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 全开
-        {"k1", "_close", "{\"rsl\":\"0003@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 全关
-        {"k2", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 卫浴开
-        {"k2", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 卫浴关
-        {"k3", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 柔光开
-        {"k3", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 柔光关
-        {"k4", "_open", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 夜灯开
-        {"k4", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 夜灯关
+        {"k1", "_open", "{\"rsl\":\"0001@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 全开
+        {"k1", "_close", "{\"rsl\":\"0003@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},  // 全关
+        {"k2", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 卫浴开
+        {"k2", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}, // 卫浴关
+        {"k3", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 柔光开
+        {"k3", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}, // 柔光关
+        {"k4", "_open", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},   // 夜灯开
+        {"k4", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}, // 夜灯关
+
+        {"k5", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 柔光开
+        {"k5", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 柔光关
+        {"k6", "_open", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 夜灯开
+        {"k6", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 夜灯关
 
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 #elif defined DEFAUTL_BATH_ALL_OPEN_PANEL
@@ -207,6 +343,24 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k3", "_close", "{\"rsl\":\"0900@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 夜灯关
         {"k4", "_open", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 柔光开
         {"k4", "_close", "{\"rsl\":\"0002@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 柔光关
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_BATH_FAN_PANEL // 卫浴 卫浴 排气扇 排气扇
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 卫浴开
+        {"k1", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 卫浴关
+        {"k2", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 卫浴开
+        {"k2", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 卫浴关
+        {"k3", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 排气扇开
+        {"k3", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},  // 排气扇关
+        {"k4", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},    // 排气扇开
+        {"k4", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}}; // 排气扇关
 
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
@@ -295,6 +449,7 @@ fmc_state_enum APP_ReadBindParameter(void)
     if (config_count > MAX_BIND_TABLE_SIZE) {
         config_count = MAX_BIND_TABLE_SIZE;
     }
+
     for (uint8_t i = 0; i < config_count; i++) {
         if (gBindDataBase[i].se == 0xFF) {
             use_default_binds = true;
@@ -326,7 +481,7 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg)
     for (i = 0; i < MAX_BIND_TABLE_SIZE; i++) { // 第一轮循环:查找是否已经存在相同的绑定记录
         if (gBindDataBase[i].se == se && strcmp(gBindDataBase[i].aei, aei) == 0 && strcmp(gBindDataBase[i].id, id) == 0) {
             strcpy(gBindDataBase[i].msg, msg);
-
+            APP_PRINTF("same bind\n");
             if (APP_SaveBindParameter() != FMC_READY) {
                 APP_PRINTF("APP_SaveBindParameter error\n");
             }
@@ -334,13 +489,13 @@ uint8_t PLCP_bindTableWrite(uint8_t se, char *aei, char *id, char *msg)
             return 1;
         }
     }
+
     for (i = 0; i < MAX_BIND_TABLE_SIZE; i++) { // 第二轮循环:如果没有找到,则找一个空位置写入新记录
-        if (gBindDataBase[i].se == 0xff) {
+        if (gBindDataBase[i].se == 0xff || gBindDataBase[i].se == 0x00) {
             gBindDataBase[i].se = se;
             strcpy(gBindDataBase[i].aei, aei);
             strcpy(gBindDataBase[i].id, id);
             strcpy(gBindDataBase[i].msg, msg);
-            APP_PRINTF("id:%s\n", id);
             if (APP_SaveBindParameter() != FMC_READY) {
                 APP_PRINTF("APP_SaveBindParameter error\n");
             }
@@ -418,7 +573,9 @@ uint8_t PLCP_bindTableDelet(uint8_t se, char *aei, char *id)
 // 清空绑定
 void PLCP_bindTableClr(void)
 {
-    app_flash_erase_page(FLASH_BIND_INFO_H_START_ADD);
+    memset(gBindDataBase, 0, sizeof(gBindDataBase));
+    APP_SaveBindParameter();
+    // app_flash_erase_page(FLASH_BIND_INFO_H_START_ADD);
 }
 
 // 统计写入绑定命令的参数中有多少条绑定数据

@@ -97,9 +97,7 @@ void MCU_Load_Product(void)
 void PLCP_Load_AEInfo(char *root);
 void MCU_Load_AEInfo(void)
 {
-    // CmdTest_MSE_Load_AEInfo(ae_num, AE_NUM_SIZE, BrandName, id, url);
     PLCP_Load_AEInfo(PLCP_Callback_Ae());
-    // PLCP_Load_AEInfo(ae_srt);
 }
 
 // char widgets_srt[] =
@@ -222,7 +220,7 @@ uint8_t MCU_Control_Set_Windspeed(uint8_t value)
     return 0;
 }
 
-//  设置属性
+// 设置属性
 uint8_t MCU_Set_Config(uint8_t *buf, uint8_t buf_len)
 {
     APP_PRINTF_BUF("MCU_Set_Config", buf, buf_len);
@@ -438,7 +436,7 @@ void MCU_SceneKj_exe(uint8_t *buf, uint8_t kj_index, uint8_t kj_type)
     }
     switch (kj_type) {
     case LED_SCENE: // LED 场景
-        APP_PRINTF("kj_index:%d status:%d\n", kj_index, buf[1]);
+        // APP_PRINTF("kj_index:%d status:%d\n", kj_index, buf[1]);
         attr_key_state_table_set(kj_index, buf[1]);
         break;
     case CH_SCENE:
@@ -552,16 +550,17 @@ void MCU_Device_Factory(void)
         delay_1ms(500);
     }
 #endif
-    CmdTest_MSE_Factory();      // 模组恢复出厂设置
-    APP_Attribute_Init();       // 清空联网状态
-    APP_SceneGroupClr();        // 清空场景与群组
-    PLCP_bindTableClr();        // 清空绑定信息
-    APP_SpecialSceneClr();      // 清空特殊场景
-    attr_kj_mode_table_reset(); // 按键类型恢复默认
-    attr_key_state_table_reset();
+    // CmdTest_MSE_Factory();      // 模组恢复出厂设置
+    APP_Attribute_Init();         // 清空联网状态
+    APP_SceneGroupClr();          // 清空场景与群组
+    PLCP_bindTableClr();          // 清空绑定信息
+    APP_SpecialSceneClr();        // 清空特殊场景
+    attr_kj_mode_table_reset();   // 按键类型恢复默认
+    attr_key_state_table_reset(); // 复位按键状态
 
     NVIC_SystemReset();
 }
+ 
 
 /*****************************************************************************
 函数名称 : MCU_Device_ResetService
@@ -781,7 +780,7 @@ void MCU_Put_Devicestatus(uint8_t *buf, uint8_t buf_len)
 *****************************************************************************/
 uint8_t MCU_Get_Ver(uint8_t *buf)
 {
-    uint8_t ver[8] = {0x00, 0x00, 0x00, 0x01, 0x20, 0x26, 0x04, 0x7};
+    uint8_t ver[8] = {0x00, 0x00, 0x00, 0x01, 0x20, 0x26, 0x08, 0x1F};
 
     memcpy(buf, ver, sizeof(ver));
     return sizeof(ver);

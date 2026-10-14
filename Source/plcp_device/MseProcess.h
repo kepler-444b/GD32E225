@@ -17,37 +17,39 @@
 #ifndef __MSEPROCESS_H_
 #define __MSEPROCESS_H_
 #include "../../Source/plcp_common/Inc/Uapps.h"
-/**********************************·þÎñÏî¶¨Òå ¿ªÊ¼***********************************/
-#define MSE_DEVICE_ON               "/_on"  // ´ò¿ª
-#define MSE_DEVICE_OFF              "/_off" // ¹Ø±Õ
+/**********************************ï¿½ï¿½ï¿½ï¿½ï¿½î¶¨ï¿½ï¿½ ï¿½ï¿½Ê¼***********************************/
+#define MSE_DEVICE_ON               "/_on"  // ï¿½ï¿½
+#define MSE_DEVICE_OFF              "/_off" // ï¿½Ø±ï¿½
 
 #define MSE_DEVICE_OPEN             "/_open"
 #define MSE_DEVICE_CLOSE            "/_close"
 #define MSE_DEVICE_STOP             "/_stop"
 
-#define MSE_DEVICE_SET_CONFIG       "/_config" // ÉèÖÃÊôÐÔ
+#define MSE_DEVICE_SET_CONFIG       "/_config" // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-#define MSE_DEVICE_GROUP_JOIN       "/g/_join" // Éè±¸¼ÓÈë×é·þÎñÏî
-#define MSE_DEVICE_GROUP_QUIT       "/g/_quit" // Éè±¸ÍË³ö×é·þÎñÏî
-#define MSE_DEVICE_GROUP_LIST       "/g/_list" // Éè±¸µÄÒÑ¼ÓÈë×éºÅÁÐ±í·þÎñÏî
+#define MSE_DEVICE_GROUP_JOIN       "/g/_join" // ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_GROUP_QUIT       "/g/_quit" // ï¿½è±¸ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_GROUP_LIST       "/g/_list" // ï¿½è±¸ï¿½ï¿½ï¿½Ñ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-#define MSE_DEVICE_SCENE_JOIN       "/s/_join" // Éè±¸¼ÓÈë³¡¾°·þÎñÏî
-#define MSE_DEVICE_SCENE_QUIT       "/s/_quit" // Éè±¸ÍË³ö³¡¾°·þÎñÏî
-#define MSE_DEVICE_SCENE_LIST       "/s/_list" // Éè±¸µÄÒÑ¼ÓÈë³¡¾°ÁÐ±í·þÎñÏî
-#define MSE_DEVICE_SCENE_COPY       "/s/_copy" // Éè±¸³¡¾°¿½±´
+#define MSE_DEVICE_SCENE_JOIN       "/s/_join" // ï¿½è±¸ï¿½ï¿½ï¿½ë³¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_SCENE_QUIT       "/s/_quit" // ï¿½è±¸ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_SCENE_LIST       "/s/_list" // ï¿½è±¸ï¿½ï¿½ï¿½Ñ¼ï¿½ï¿½ë³¡ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_SCENE_COPY       "/s/_copy" // ï¿½è±¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define MSE_DEVICE_SCENE_DELE       "/s/_del"
 
-#define MSE_DEVICE_PLCP_FACTORY     "/_factory" // Éè±¸»Ö¸´³ö³§ÉèÖÃ·þÎñÏî
-#define MSE_DEVICE_PLCP_RESET       "/_rst"     // Éè±¸»Ö¸´³ö³§ÉèÖÃ·þÎñÏî
-#define MSE_DEVICE_PLCP_STATE       "/_state"   // ²éÑ¯×´Ì¬·þÎñÏî
+#define MSE_DEVICE_PLCP_FACTORY     "/_factory" // ï¿½è±¸ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_PLCP_RESET       "/_rst"     // ï¿½è±¸ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_PLCP_STATE       "/_state"   // ï¿½ï¿½Ñ¯×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-#define MSE_DEVICE_PLCP_STATE_ONOFF "/_state?_onoff" // ²éÑ¯¿ª¹Ø×´Ì¬·þÎñÏî
-#define MSE_DEVICE_PLCP_MCUVER      "/_mcuVer"       // ²éÑ¯MCU°æ±¾·þÎñÏî
+#define MSE_DEVICE_PLCP_STATE_ONOFF "/_state?_onoff" // ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define MSE_DEVICE_PLCP_MCUVER      "/_mcuVer"       // ï¿½ï¿½Ñ¯MCUï¿½æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 #define MSE_DEVICE_PLCP_BIND        "/_bind"
 
-/**********************************·þÎñÏî¶¨Òå ½áÊø***********************************/
-/**********************************Ã¶¾Ù¶¨Òå ¿ªÊ¼***********************************/
+#define MSE_DEVICE_PLCP_MSET        "/_mSET" // ç»„ç½‘æˆåŠŸåº”ç­”
+
+/**********************************ï¿½ï¿½ï¿½ï¿½ï¿½î¶¨ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½***********************************/
+/**********************************Ã¶ï¿½Ù¶ï¿½ï¿½ï¿½ ï¿½ï¿½Ê¼***********************************/
 typedef enum {
     DEVICE_STATE_ON_E = 0,
     DEVICE_STATE_OFF_E,
@@ -74,11 +76,12 @@ typedef enum {
     DEVICE_STATE_ONOFF_e,
     DEVICE_MCUVER_e,
     DEVICE_BIND_e,
+    DEVICE_MSET_e,
 
 } MSE_RESOURCE_SERVICE_e;
 
-/**********************************Ã¶¾Ù¶¨Òå ¿ªÊ¼***********************************/
-/**********************************½á¹¹ÌåÉùÃ÷ ¿ªÊ¼***********************************/
+/**********************************Ã¶ï¿½Ù¶ï¿½ï¿½ï¿½ ï¿½ï¿½Ê¼***********************************/
+/**********************************ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ê¼***********************************/
 struct Function_Config {
     uint8_t (*Control_Open)(void);
     uint8_t (*Control_Close)(void);
@@ -107,6 +110,6 @@ uint8_t APP_SendRSL(char *rslStr, char *from, uint8_t *playload, uint8_t playloa
 void mseprecess_init(void);
 void CmdTest_MSE_Factory(void);
 void CmdTest_MSE_Apply_net(uint8_t type, uint8_t def);
-/***********************************º¯ÊýÉùÃ÷ ½áÊø************************************/
+/***********************************ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½************************************/
 
 #endif

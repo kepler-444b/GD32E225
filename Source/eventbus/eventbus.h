@@ -4,39 +4,7 @@
 // 事件类型定义(根据需求修改)
 typedef enum {
 
-    EVENT_ONLINE,  // 设备上线
-    EVENT_OFFLINE, // 设备离线
-
-    EVENT_ENTER_CONFIG, // 进入配置模式
-    EVENT_EXIT_CONFIG,  // 退出配置模式
-    EVENT_SAVE_SUCCESS, // 配置信息保存成功
-
-    EVENT_ENTER_CONFIG_EX, // 进入配置模式
-    EVENT_EXIT_CONFIG_EX,  // 退出配置模式
-    EVENT_SAVE_SUCCESS_EX, // 配置信息保存成功
-
-    EVENT_SEND_CMD,    // 面板发送命令
-    EVENT_RECEIVE_CMD, // 模块接收命令
-
-    EVENT_PLCP_NOTIFY,     // PLCP 发送事件
-    EVENT_PLCP_INIT_TIMER, // PLCP 初始化
-    EVENT_PLCP_SYCN_FLAG,  // PLCP 模组复位
-
-    EVENT_GET_MAC, // 获取mac地址
-    EVENT_SET_DID, // 设置DID
-
-    PLCP_LOAD_PRODUCT, // 加载产品信息
-    PLCP_MSE_GET_DID,
-    PLCP_LOAD_AEINFO,
-    PLCP_EN_TRANS,
-    PLCP_LOAD_WIDGETS,
-
-    PLCP_EVENT_REPORT,
-    PLCE_SEND_BIND_MSG,
-
-    PLCP_COPY_GET,
-    PLCP_PANEL_KEY,
-
+    EVENT_NETWORK_SUCC, // 组网成功
     // 添加更多事件类型...
     EVENT_COUNT // 自动计算事件数量
 } event_type_e;

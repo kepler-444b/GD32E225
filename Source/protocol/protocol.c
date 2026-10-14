@@ -35,4 +35,5 @@ static void app_proto_test(usart1_rx_buf_t *buf)
 static void app_proto_check(usart0_rx_buf_t *buf)
 {
     MCU_UartReceive(buf->buffer, buf->length);
+    // APP_PRINTF_BUF("buffer", buf->buffer, buf->length);
 }

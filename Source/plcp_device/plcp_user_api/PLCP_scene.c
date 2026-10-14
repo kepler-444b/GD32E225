@@ -1,15 +1,14 @@
 
-#include "../../Source/device/device_manager.h"
-
+#include "../../Source/plcp_device/plcp_user_api/PLCP_scene.h"
 #include "../../Source/base/base.h"
 #include "../../Source/base/debug.h"
+#include "../../Source/device/device_manager.h"
 #include "../../Source/plcp_common/Inc/lmexxx_conf.h"
 #include "../../Source/plcp_device/APP_PublicAttribute.h"
 #include "../../Source/plcp_device/MseProcess.h"
 #include "../../Source/plcp_device/plcp_panel/attr_table.h"
 #include "../../Source/plcp_device/plcp_panel/plcp_panel_info.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_bind.h"
-#include "../../Source/plcp_device/plcp_user_api/PLCP_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h"
 #include "../../Source/pwm/pwm_hw.h"
 #include "../../Source/timer/timer.h"
@@ -174,7 +173,7 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
 
     if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 排气扇
         use_default_led_scenes = true;
-        my_led_scene[3].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}};               // 卫浴灯 开
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴灯 同步
         my_led_scene[3].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开 开
         my_led_scene[3].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡 关
         my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
@@ -182,6 +181,43 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
 
         my_led_scene[3].scenes[5] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光 关
         my_led_scene[3].scenes[6] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯 关
+    }
+
+#elif defined DEFAUTL_DND_CLEAR_PANEL_DOOR // 勿扰 清理 卫浴灯 排气扇(入门4键开关)
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1
+        use_default_led_scenes = true;
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0002, {0x01, 0x01}, {0x01, 0x00}}; // 勿扰
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0003, {0x01, 0x00}};               // 清理
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[0].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2
+        use_default_led_scenes = true;
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0003, {0x01, 0x01}, {0x01, 0x00}}; // 清理
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0002, {0x01, 0x00}};               // 勿扰
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[1].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0500, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴灯 同步
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[2].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+
+        my_led_scene[2].scenes[4] = (single_led_scene){0x0023, {0x01, 0x00}, {0x01, 0x00}}; // 客厅 同步
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 排气扇
+        use_default_led_scenes = true;
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0500, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴灯 同步
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开 开
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡 关
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[3].scenes[4] = (single_led_scene){0x0017, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇(淋) 同步
+
+        my_led_scene[2].scenes[5] = (single_led_scene){0x0023, {0x01, 0x00}, {0x01, 0x00}}; // 客厅 同步
     }
 #elif defined DEFAUTL_DND_CLEAR_PANEL_JY
 
@@ -367,7 +403,97 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
         my_led_scene[5].scenes[4] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光
         my_led_scene[5].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯
     }
+#elif defined DEFAUTL_BALCONY_LIGHT_PANEL // 阳台灯
 
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1
+        use_default_led_scenes = true;
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[0].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[0].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2
+        use_default_led_scenes = true;
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[1].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[1].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[2].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[2].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4
+        use_default_led_scenes = true;
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[3].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[3].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+
+    if (my_led_scene[4].scenes[0].scene_id == 0xFFFF) { // led_5
+        use_default_led_scenes = true;
+        my_led_scene[4].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[4].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[4].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[4].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[4].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+
+    if (my_led_scene[5].scenes[0].scene_id == 0xFFFF) { // led_6
+        use_default_led_scenes = true;
+        my_led_scene[5].scenes[0] = (single_led_scene){0x0022, {0x01, 0x01}, {0x01, 0x00}}; // 阳台灯   同步
+        my_led_scene[5].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开      开
+        my_led_scene[5].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关      关
+        my_led_scene[5].scenes[4] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡  关
+        my_led_scene[5].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯      关
+    }
+
+#elif defined DEFAUTL_LIVING_SOFT_PANEL // 客厅灯 客厅灯 柔光 柔光
+
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1 客厅灯
+        use_default_led_scenes = true;
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0023, {0x01, 0x01}, {0x01, 0x00}}; // 客厅灯 同步
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[0].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[0].scenes[4] = (single_led_scene){0x0600, {0x01, 0x00}};               // 柔光(客厅) 关闭
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2 客厅灯
+        use_default_led_scenes = true;
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0023, {0x01, 0x01}, {0x01, 0x00}}; // 客厅灯 同步
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[1].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[1].scenes[4] = (single_led_scene){0x0600, {0x01, 0x00}};               // 柔光(客厅) 关闭
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3 柔光(客厅)
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0600, {0x01, 0x01}, {0x01, 0x00}}; // 柔光(客厅) 同步
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[2].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[2].scenes[4] = (single_led_scene){0x0023, {0x01, 0x00}};               // 客厅灯 关闭
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 柔光(客厅)
+        use_default_led_scenes = true;
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0600, {0x01, 0x01}, {0x01, 0x00}}; // 柔光(客厅) 同步
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[3].scenes[4] = (single_led_scene){0x0023, {0x01, 0x00}};               // 客厅灯 关闭
+    }
 #elif defined DEFAUTL_AROM_LINGHT_PANEL // 香薰灯
     if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1
         use_default_led_scenes = true;
@@ -454,6 +580,24 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
         my_led_scene[3].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
         my_led_scene[3].scenes[4] = (single_led_scene){0x0100, {0x01, 0x00}};               // 全开
     }
+
+    if (my_led_scene[4].scenes[0].scene_id == 0xFFFF) { // led_3 柔光
+        use_default_led_scenes = true;
+        my_led_scene[4].scenes[0] = (single_led_scene){0x0200, {0x01, 0x01}, {0x01, 0x00}}; // 柔光
+        my_led_scene[4].scenes[1] = (single_led_scene){0x0009, {0x01, 0x00}};               // 夜灯
+        my_led_scene[4].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[4].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[4].scenes[4] = (single_led_scene){0x0100, {0x01, 0x00}};               // 全开
+    }
+
+    if (my_led_scene[5].scenes[0].scene_id == 0xFFFF) { // led_4 夜灯
+        use_default_led_scenes = true;
+        my_led_scene[5].scenes[0] = (single_led_scene){0x0009, {0x01, 0x01}, {0x01, 0x00}}; // 夜灯
+        my_led_scene[5].scenes[1] = (single_led_scene){0x0200, {0x01, 0x00}};               // 柔光
+        my_led_scene[5].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[5].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[5].scenes[4] = (single_led_scene){0x0100, {0x01, 0x00}};               // 全开
+    }
 #elif defined DEFAUTL_BATH_ALL_OPEN_PANEL
     if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1 卫浴总控
         use_default_led_scenes = true;
@@ -490,6 +634,53 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
         my_led_scene[3].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
         my_led_scene[3].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
         my_led_scene[3].scenes[4] = (single_led_scene){0x0100, {0x01, 0x00}};               // 全开
+    }
+#elif defined DEFAUTL_BATH_FAN_PANEL // 卫浴 卫浴 排气扇 排气扇
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1 卫浴总控
+        use_default_led_scenes = true;
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴总控
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[0].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+
+        my_led_scene[0].scenes[4] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光
+        my_led_scene[0].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2 卫浴总控
+        use_default_led_scenes = true;
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴总控
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[1].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+
+        my_led_scene[1].scenes[4] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光
+        my_led_scene[1].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3 排气扇
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇  同步
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光 关
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0009, {0x01, 0x01}, {0x01, 0x00}}; // 夜灯 关
+
+        my_led_scene[2].scenes[3] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[2].scenes[4] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[2].scenes[5] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡 关
+
+        my_led_scene[2].scenes[6] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴总控 同步
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 排气扇
+        use_default_led_scenes = true;
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇  同步
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光 关
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0009, {0x01, 0x01}, {0x01, 0x00}}; // 夜灯 关
+
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[3].scenes[4] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[3].scenes[5] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡 关
+
+        my_led_scene[3].scenes[6] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴总控 同步
     }
 #elif defined DEFAUTL_AROM_FIRE_PANEL
 
@@ -641,6 +832,97 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
         my_led_scene[3].scenes[1] = (single_led_scene){0x0003, {0x01, 0x00}};               // 清理 关
         my_led_scene[3].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
         my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+
+#elif defined DEFAUTL_CLEAR_DND_PANEL_S20
+
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_2 勿扰
+        use_default_led_scenes = true;
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0002, {0x01, 0x01}, {0x01, 0x00}}; // 勿扰 同步
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0003, {0x01, 0x00}};               // 清理 关
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[0].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2 勿扰
+        use_default_led_scenes = true;
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0002, {0x01, 0x01}, {0x01, 0x00}}; // 勿扰 同步
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0003, {0x01, 0x00}};               // 清理 关
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[1].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3 清理
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0003, {0x01, 0x01}, {0x01, 0x00}}; // 清理 同步
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0002, {0x01, 0x00}};               // 勿扰 关
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[2].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 清理
+        use_default_led_scenes = true;
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0003, {0x01, 0x01}, {0x01, 0x00}}; // 清理 同步
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0002, {0x01, 0x00}};               // 勿扰 关
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+    }
+
+#elif defined DEFAUTL_PORCH_FAN_PANEL_S20 // 廊灯 排气扇 卫浴
+
+    if (my_led_scene[0].scenes[0].scene_id == 0xFFFF) { // led_1 廊灯
+        use_default_led_scenes = true;
+
+        my_led_scene[0].scenes[0] = (single_led_scene){0x0001, {0x01, 0x01}, {0x01, 0x00}}; // 廊灯 同步
+
+        my_led_scene[0].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[0].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[0].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡
+    }
+    if (my_led_scene[1].scenes[0].scene_id == 0xFFFF) { // led_2 排气扇
+        use_default_led_scenes = true;
+
+        my_led_scene[1].scenes[0] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇 同步
+
+        my_led_scene[1].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[1].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[1].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡
+    }
+
+    if (my_led_scene[2].scenes[0].scene_id == 0xFFFF) { // led_3 卫浴
+        use_default_led_scenes = true;
+        my_led_scene[2].scenes[0] = (single_led_scene){0x0018, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴 同步
+
+        my_led_scene[2].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[2].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[2].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡 关
+    }
+
+    if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_1 廊灯
+        use_default_led_scenes = true;
+
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0001, {0x01, 0x01}, {0x01, 0x00}}; // 廊灯 同步
+
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡
+    }
+    if (my_led_scene[4].scenes[0].scene_id == 0xFFFF) { // led_2 排气扇
+        use_default_led_scenes = true;
+
+        my_led_scene[4].scenes[0] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇 同步
+
+        my_led_scene[4].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[4].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[4].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡
+    }
+
+    if (my_led_scene[5].scenes[0].scene_id == 0xFFFF) { // led_3 卫浴
+        use_default_led_scenes = true;
+        my_led_scene[5].scenes[0] = (single_led_scene){0x0018, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴 同步
+
+        my_led_scene[5].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}}; // 全开 开
+        my_led_scene[5].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}}; // 全关 关
+        my_led_scene[5].scenes[3] = (single_led_scene){0x0206, {0x01, 0x00}}; // 一键深睡 关
     }
 
 #elif defined DEFAUTL_BATH_EXHA_PANEL
@@ -828,7 +1110,7 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         return ret;
 
     // 有人欢迎
-#if defined DEFAUTL_CURTAIN_PANEL // 窗帘开 窗帘关
+#if defined DEFAUTL_CURTAIN_PANEL || defined DEFAUTL_CURTAIN_LIVING_PANEL || defined DEFAUTL_CURTAIN_PANEL_MIRR // 窗帘开 窗帘关
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
@@ -839,7 +1121,7 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[2].sceneId = 0x8888;
         memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
-#elif defined DEFAUTL_DND_CLEAR_PANEL || defined DEFAUTL_DND_CLEAR_PANEL_JY         // 清理 勿扰
+#elif defined DEFAUTL_DND_CLEAR_PANEL || defined DEFAUTL_DND_CLEAR_PANEL_JY || defined DEFAUTL_DND_CLEAR_PANEL_DOOR        // 清理 勿扰
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
@@ -850,7 +1132,7 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[2].sceneId = 0x8888;
         memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
-#elif defined DEFAUTL_MIRROR_LINGHT_PANEL || defined DEFAUTL_MIRROR_LINGHT_PANEL_JY // 镜前灯
+#elif defined DEFAUTL_MIRROR_LINGHT_PANEL || defined DEFAUTL_MIRROR_LINGHT_PANEL_JY || defined DEFAUTL_BALCONY_LIGHT_PANEL // 镜前灯
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
@@ -870,11 +1152,43 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x00}, 12);
     }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
 #elif defined DEFAUTL_BATH_ALL_OPEN_PANEL    // 卫浴 全开
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00}, 12);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+#elif defined DEFAUTL_BATH_FAN_PANEL         // 卫浴 卫浴 排气扇 排气扇
+    if (DeviceScene[0].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[0].sceneId = 0x9999;
+        memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01}, 12);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+#elif defined DEFAUTL_LIVING_SOFT_PANEL      // 客厅 客厅 柔光 柔光
+    if (DeviceScene[0].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[0].sceneId = 0x9999;
+        memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00}, 12);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
 #elif defined DEFAUTL_AROM_LINGHT_PANEL      // 香薰灯
     if (DeviceScene[0].sceneId == 0xFFFF) {
@@ -882,17 +1196,32 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 16);
     }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 16);
+    }
 #elif defined DEFAUTL_AROM_FIRE_PANEL        // 香薰 壁炉
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01}, 12);
     }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
 #elif defined DEFAUTL_CLEAR_DND_TOILET_PANEL // 清理 勿扰 马桶间 排风扇
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
 
 #elif defined DEFAUTL_ALL_OPEN_ALL_CLOSE // 全开 全关 马桶间 排气扇
@@ -902,6 +1231,11 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
 
 #elif defined DEFAUTL_CLEAR_DND_PANEL // 清理 清理 勿扰 勿扰
     if (DeviceScene[0].sceneId == 0xFFFF) {
@@ -909,18 +1243,55 @@ static fmc_state_enum APP_ReadSceneParameter(void)
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+#elif defined DEFAUTL_CLEAR_DND_PANEL_S20
+
+    if (DeviceScene[0].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[0].sceneId = 0x9999;
+        memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+
+#elif defined DEFAUTL_PORCH_FAN_PANEL_S20
+
+    if (DeviceScene[0].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[0].sceneId = 0x9999;
+        memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01}, 16);
+    }
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01}, 16);
+    }
+
 #elif defined DEFAUTL_BATH_EXHA_PANEL
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
     }
-#elif defined DEFAUTL_MIRROR_LIGHT_CT                                  // 台盆镜灯
+    if (DeviceScene[2].sceneId == 0xFFFF) {
+        use_default_scenes = true;
+        DeviceScene[2].sceneId = 0x8888;
+        memcpy(DeviceScene[2].scenePower, (uint8_t[]){0x0B, 0x05, 0xF0, 0xF0, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00}, 12);
+    }
+#elif defined DEFAUTL_MIRROR_LIGHT_CT // 台盆镜灯
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
         DeviceScene[0].sceneId = 0x9999;
         memcpy(DeviceScene[0].quitscenePower, (uint8_t[]){0x04, 0x01, 0x60, 0x00, 0x80}, 5);
     }
+
 #elif defined DEFAUTL_BED_LIGHT_CT_L || defined DEFAUTL_BED_LIGHT_CT_R // 床头花灯(左)||床头花灯(右)
     if (DeviceScene[0].sceneId == 0xFFFF) {
         use_default_scenes = true;
@@ -930,14 +1301,21 @@ static fmc_state_enum APP_ReadSceneParameter(void)
 
 #endif
 
-#if defined DEFAUTL_MIRROR_LINGHT_PANEL || defined DEFAUTL_MIRROR_LINGHT_PANEL_JY // 镜前灯
-    if (DeviceScene[1].sceneId == 0xFFFF) {                                       // 无人离开
+#if defined DEFAUTL_MIRROR_LINGHT_PANEL || defined DEFAUTL_MIRROR_LINGHT_PANEL_JY || defined DEFAUTL_BALCONY_LIGHT_PANEL // 镜前灯
+    if (DeviceScene[1].sceneId == 0xFFFF) {                                                                              // 无人离开
         use_default_scenes = true;
         DeviceScene[1].sceneId = 0x6666;
         memcpy(DeviceScene[1].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 16);
         use_default_scenes = true;
     }
 #elif defined DEFAUTL_AROM_LINGHT_PANEL // 香薰灯
+    if (DeviceScene[1].sceneId == 0xFFFF) { // 无人离开
+        use_default_scenes = true;
+        DeviceScene[1].sceneId = 0x6666;
+        memcpy(DeviceScene[1].scenePower, (uint8_t[]){0x0F, 0x05, 0xFC, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, 16);
+    }
+#elif defined DEFAUTL_PORCH_FAN_PANEL_S20
+
     if (DeviceScene[1].sceneId == 0xFFFF) { // 无人离开
         use_default_scenes = true;
         DeviceScene[1].sceneId = 0x6666;
@@ -1628,6 +2006,51 @@ uint16_t APP_Scene_Copy_Put(uint8_t *buf, uint16_t len)
     return 0;
 }
 
+// 在夜灯情况下,收到其他场景号
+void APP_Device_OtherScenes(uint16_t sceneId, uint8_t status)
+{
+    bool backlight_on = false; // 标记背光是否已开启
+
+    // 遍历匹配 sceneId 并直接执行场景
+    for (uint8_t j = 0; j < LED_SCENE_NUM; j++) {
+        for (uint8_t i = 0; i < led_sceneIndex[j]; i++) {
+            if (my_led_scene[j].scenes[i].scene_id == sceneId) {
+                // 首次匹配到时,开启所有背光
+                if (!backlight_on) {
+                    backlight_on = true;
+                    for (uint8_t k = 0; k < AD_LED_SCENE_NUM; k++) {
+                        switch_led_b_ctrl(k, 100, 1);
+                    }
+                }
+
+                // 根据 status 选择开场景或关场景
+                uint8_t *target_scene = status ? my_led_scene[j].scenes[i].open_scene : my_led_scene[j].scenes[i].close_scene;
+
+                MCU_SceneKj_exe(target_scene, j, LED_SCENE);
+            }
+        }
+    }
+
+    // 未找到任何匹配受控按键,直接返回
+    if (!backlight_on)
+        return;
+
+    // 检查是否有任意按键处于开启状态,若全部关闭则熄灭背光
+    bool has_active_key = false;
+    for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+        if (attr_key_state_table_get(i)) {
+            has_active_key = true;
+            break; // 只要有一个开启,直接提前退出
+        }
+    }
+
+    if (!has_active_key) {
+        for (uint8_t i = 0; i < LED_SCENE_NUM; i++) {
+            switch_led_b_ctrl(i, 0, 1);
+        }
+    }
+}
+
 // 启动场景
 void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
 {
@@ -1649,46 +2072,17 @@ void APP_Device_SceneStart(UappsMessage *uappsMsg, const char *aei)
 
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
 
-        const NightScene_t *temp = night_scene_info_get();
-
-        for (uint8_t j = 0; j < NIGHT_SCENE_MAX; j++) {
-            if (temp[j].night_enable == 0x01) {
-                if (night_scene_state_get(j) == 0x02) { // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
-                    delay_scene_stop(j);
-                }
-                if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
-                    if (sceneId == temp[j].open_night) {
-                        APP_PRINTF("temp[%d].open_night :%d\n", j, temp[j].night_scene_current);
-                        night_scene_close(j);
-                        respondCode = UAPPS_ACK_CHANGED;
-                        break;
-                    } else {
-                        return;
-                    }
-                }
+        if (APP_SpcialSceneCheck(sceneId, &respondCode) == false) { // 检查夜灯
+            APP_PRINTF("Other scenes\n");
+            APP_Device_OtherScenes(sceneId, true);
+            if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {
+                APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
             }
+            return;
         }
 
-        for (uint8_t i = 0; i < NIGHT_SCENE_MAX; i++) {
-            if (temp[i].night_enable == 0x01) { // 夜灯场景是否使能
-                if (sceneId == temp[i].open_night) {
-                    night_scene_open(i); // 开启某个夜灯场景
-                    respondCode = UAPPS_ACK_CHANGED;
-                }
-            }
-        }
         for (uint8_t j = 0; j < LED_SCENE_NUM; j++) {
-#if 0
-            // 遍历继电器列表
-            uint8_t ch_cnt = ch_sceneIndex[j];
-            for (uint8_t i = 0; i < ch_cnt; i++) {
-                if (my_ch_scene[j].scenes[i].scene_id == sceneId) {
-                    MCU_SceneKj_exe(my_ch_scene[j].scenes[i].open_scene, j, CH_SCENE);
-                    respondCode = UAPPS_ACK_CHANGED;
-                    break;
-                }
-            }
-#endif
+
             // 遍历 LED 列表
             uint8_t led_cnt = led_sceneIndex[j];
             for (uint8_t i = 0; i < led_cnt; i++) {
@@ -1736,6 +2130,16 @@ void APP_Device_SceneClose(UappsMessage *uappsMsg, const char *aei)
         return;
     }
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
+
+        if (APP_SpcialSceneCheck(sceneId, &respondCode) == false) { // 检查夜灯
+            APP_PRINTF("Other scenes\n");
+            APP_Device_OtherScenes(sceneId, false);
+            if (uappsMsg->hdr.type == UAPPS_TYPE_CON) {
+                APP_SendACK(uappsMsg, payloadFlag, &scratch, UAPPS_TYPE_ACK, respondCode);
+            }
+            return;
+        }
+
         for (uint8_t j = 0; j < LED_SCENE_NUM; j++) {
             uint8_t ch_cnt = ch_sceneIndex[j];
             for (uint8_t i = 0; i < ch_cnt; i++) {
@@ -1998,6 +2402,9 @@ static curtain_t my_curtain[KEY_NUMBER];
 
 void APP_Device_GroupOpen(UappsMessage *uappsMsg, RSL_t *rsl) // 执行窗帘开
 {
+    uint16_t sceneId = 0;
+    APP_StrToHex((uint8_t *)rsl->aei, strlen(rsl->aei), (uint8_t *)&sceneId);
+
     uint8_t open_num = PLCP_BindTableRead_aei(rsl->aei, "_open", aei_list, KEY_NUMBER); // 查找该场景号的"窗帘开"按键
 
     APP_PRINTF("open_num:%d\n", open_num);

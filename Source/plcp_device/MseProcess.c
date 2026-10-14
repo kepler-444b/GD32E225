@@ -9,10 +9,11 @@
 #include "../../Source/plcp_device/plcp_user_api/PLCP_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/PLCP_special_scene.h"
 #include "../../Source/plcp_device/plcp_user_api/plcp_sdk_api.h"
+#include "../Source/eventbus/eventbus.h"
 #include "../Source/plcp_device/plcp_user_api/PLCP_callback.h"
 #include "systick.h"
 
-#define MSE_SERVICE_NUM 20
+#define MSE_SERVICE_NUM 21
 static ServiceEntityAttribute gMSEService[MSE_SERVICE_NUM] =
     {
         MSE_DEVICE_ON,
@@ -39,6 +40,7 @@ static ServiceEntityAttribute gMSEService[MSE_SERVICE_NUM] =
         MSE_DEVICE_PLCP_STATE_ONOFF,
         MSE_DEVICE_PLCP_MCUVER,
         MSE_DEVICE_PLCP_BIND,
+        MSE_DEVICE_PLCP_MSET,
 };
 
 const struct Function_Config dev =
@@ -201,6 +203,7 @@ void APP_STATE_ONOFF_DEVICESTATE(UappsMessage *uappsMsg)
     APP_PRINTF("APP_STATE_ONOFF_DEVICESTATE\n");
 }
 
+// 恢复出厂设置
 void APP_RestoreFactorySettings(UappsMessage *uappsMsg)
 {
     uint8_t respondCode = UAPPS_BAD_REQUEST;
@@ -218,10 +221,16 @@ void APP_RestoreFactorySettings(UappsMessage *uappsMsg)
     }
 }
 
+// 清除场景及群组
 void APP_ResetService(UappsMessage *uappsMsg)
 {
-    LOGINFO0(UART_DEBUG, "Enter Reset\n");
+    APP_PRINTF("Enter Reset\n");
 
+    if (uappsMsg->pl_ptr[0] == 0x01 && uappsMsg->pl_ptr[1] == 0x1C && uappsMsg->pl_ptr[2] == 0x00) { // 恢复出厂设置
+        MCU_Device_Factory();
+    }
+
+    NVIC_SystemReset();
     if (uappsMsg->hdr.hdrCode == UAPPS_REQ_PUT) {
         dev.Device_Reset(uappsMsg->pl_ptr, uappsMsg->pl_len);
     }
@@ -423,7 +432,6 @@ void APP_STATE_SCENE_LIST(UappsMessage *uappsMsg, const char *aei)
 
 void APP_STATE_SCENE_COPY(UappsMessage *uappsMsg, const char *aei)
 {
-
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uint8_t payloadFlag = 0;
     uint16_t ackLen = 0;
@@ -535,9 +543,7 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
     uint8_t respondCode = UAPPS_BAD_REQUEST;
     uapps_rw_buffer_t scratch;
     memset(&scratch, 0, sizeof(uapps_rw_buffer_t));
-
     const sPublic_attribute *pAttributeOfAPP = APP_Attribute_GetPointer();
-
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp(rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {
             if (i > DEVICE_SCENE_COPY_e) { // 跟控制无关的内容无需判断did
@@ -594,7 +600,7 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
         APP_STATE_ONOFF_DEVICESTATE(uappsMsg);
         index++;
     } break;
-    case DEVICE_FACTORY_e: {
+    case DEVICE_FACTORY_e: { // 恢复出厂设置
         APP_RestoreFactorySettings(uappsMsg);
         index++;
     } break;
@@ -605,6 +611,14 @@ void APP_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *Buff, 
     }
     case DEVICE_BIND_e: {
         APP_BIND_Processing(uappsMsg, &scratch);
+        index++;
+    } break;
+    case DEVICE_MSET_e: {
+        if (uappsMsg->pl_ptr[0] == DEV_TYPE &&
+            uappsMsg->pl_ptr[1] == 0x00) {
+            // 组网成功应答
+            app_eventbus_publish(EVENT_NETWORK_SUCC, NULL);
+        }
         index++;
     } break;
     }
@@ -624,17 +638,12 @@ uint8_t APP_Group_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_
                 delay_scene_stop(j);
             }
 
-            if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
-                night_scene_close(j);
+            if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式,直接退出
+                return false;
             }
         }
     }
 
-    // if (night_scene_info_get()->night_enable == 0x01) { // 使能夜灯模式
-    //     if (night_scene_state_get() == 0x02) {          // 即将进入夜灯模式(此时收到任何群组都退出夜灯模式)
-    //         delay_scene_stop();
-    //     }
-    // }
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp((char *)rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {
             break;
@@ -688,18 +697,6 @@ void APP_Scene_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_t *
 {
     APP_PRINTF("APP_Scene_TOPIC_MSEProcessing\n");
     uint16_t i = 0;
-    // const NightScene_t *temp = night_scene_info_get();
-    // for (uint8_t j = 0; j < NIGHT_SCENE_MAX; j++) {
-    //     if (temp[j].night_enable == 0x01) {
-    //         if (night_scene_state_get(j) == 0x02) { // 即将进入夜灯模式(此时收到任何场景都退出夜灯模式)
-    //             delay_scene_stop(j);
-    //         }
-
-    //         if (night_scene_state_get(j) == 0x01) { // 当前已经是夜灯模式
-    //             night_scene_close(j);
-    //         }
-    //     }
-    // }
 
     for (i = 0; i < MSE_SERVICE_NUM; i++) {
         if (strcmp((char *)rsl->rsi, (char *)gMSEService[i].resourceInfo) == 0) {
@@ -754,9 +751,7 @@ void APP_UappsMsgProcessing(uint8_t *inputDataBuff, uint16_t inputDataBuffLen)
     memset(&uappsMsg, 0, sizeof(UappsMessage));
     memset(&rsiMsg, 0, sizeof(RSL_t));
     memset(rsiStr, 0, sizeof(rsiStr));
-
     isUappsMsg = isUappsData((char *)inputDataBuff, inputDataBuffLen, &uappsMsgStartIndex);
-
     if (1 == isUappsMsg) {
         uappsMsgLen = inputDataBuffLen - uappsMsgStartIndex - ESC_LEN;
         isRSIDataFlag = UappsFromBytes(&inputDataBuff[uappsMsgStartIndex + ESC_LEN], uappsMsgLen, &uappsMsg);
