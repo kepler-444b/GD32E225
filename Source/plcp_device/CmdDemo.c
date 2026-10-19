@@ -402,13 +402,14 @@ void CmdTest_MSE_SET_Transfer(void)
     MCU_Send_date(uartSendBuff, uartSendBuffLen);
 }
 
+// 将mcu固件版本写到模组
 void CmdTest_MSE_McuVer(void)
 {
     UappsMessage testCoap;
     char rsi[50] = "SE0./_mcuVer";
     uint8_t uartSendBuff[100];
     uint16_t uartSendBuffLen = 0;
-    uint8_t mcu_ver[8] = {0x00, 0x00, 0x00, 0x04, 0x20, 0x26, 0x04, 0x08};
+    uint8_t mcu_ver[8] = {0x00, 0x00, 0x00, 0x05, 0x20, 0x26, 0x10, 0x19};
     printf("enter SET_DID\n");
 
     UappsCreateMessage(&testCoap, UAPPS_TYPE_CON, UAPPS_REQ_PUT, rsi);

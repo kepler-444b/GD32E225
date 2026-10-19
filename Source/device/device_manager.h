@@ -2,18 +2,18 @@
 #define _DEVICE_MANAGER_H_
 
 // 设备类型(多选一)
-// #define PLCP_PANEL // 灯控面板
-#define PLCP_LIGHT_CT // 灯驱
+#define PLCP_PANEL // 灯控面板
+// #define PLCP_LIGHT_CT // 灯驱
 
 #if defined PLCP_PANEL
 
-#define DEV_TYPE 0x00 // 产品类型(面板)
+#define DEV_TYPE   0x00 // 产品类型(面板)
 
-#define PWM_HIGH // pwm高电平有效
+#define PWM_HIGH   // pwm高电平有效
 
-// #define PANEL_TD   // 横向面板
-// #define PANEL_4KEY // 4键面板
-#define PANEL_6KEY // 6键面板
+#define PANEL_TD   // 横向面板
+#define PANEL_4KEY // 4键面板
+// #define PANEL_6KEY // 6键面板
 
 #if defined PANEL_4KEY
 #define KEY_NUMBER 6
@@ -23,7 +23,9 @@
 #define RELAY_NUMBER 4
 
 // ************************************* 默认配置 *************************************
-// #define DEFAUTL_CURTAIN_PANEL // 窗帘开 窗帘关 窗纱开 窗纱关
+
+// 亚朵3.6
+#define DEFAUTL_CURTAIN_PANEL // 窗帘开 窗帘关 窗纱开 窗纱关
 // #define DEFAUTL_CURTAIN_PANEL_MIRR // 窗帘关 窗帘开 窗纱关 窗纱开
 // #define DEFAUTL_DND_CLEAR_PANEL // 勿扰 清理 卫浴灯 排气扇
 // #define DEFAUTL_MIRROR_LINGHT_PANEL // 镜前灯
@@ -36,7 +38,7 @@
 // #define DEFAUTL_LIVING_SOFT_PANEL // 客厅灯 客厅灯 柔光 柔光
 // #define DEFAUTL_CURTAIN_LIVING_PANEL // 窗帘开 窗帘关 窗纱开 窗纱关(客厅)
 
-// 亚朵(见野)
+// 亚朵4.0
 // #define DEFAUTL_MIRROR_LINGHT_PANEL_JY // 镜前灯
 // #define DEFAUTL_DND_CLEAR_PANEL_JY // 勿扰 清理 卫浴灯 排气扇
 
@@ -50,7 +52,7 @@
 
 // S2.0
 // #define DEFAUTL_CLEAR_DND_PANEL_S20 // 勿扰 勿扰 清理 清理
-#define DEFAUTL_PORCH_FAN_PANEL_S20 // 廊灯 排气扇 卫浴
+// #define DEFAUTL_PORCH_FAN_PANEL_S20 // 廊灯 排气扇 卫浴
 
 // ***********************************************************************************
 

@@ -149,6 +149,7 @@ bool APP_ReadPostFlag(void)
     return true;
 }
 
+// 处理 PLC 模组的 ACK 消息
 void APP_Tx_ProcessOfACKReceived(UappsMessage *uappsMsg)
 {
     uint16_t DID = 0;
@@ -193,8 +194,6 @@ void APP_Tx_ProcessOfACKReceived(UappsMessage *uappsMsg)
             }
             break;
         case MSE_GET_CC0MAC:
-            // APP_PRINTF("CCOMacAddr:%02x%02x%02x%02x%02x%02x\r\n", uappsMsg->pl_ptr[0], uappsMsg->pl_ptr[1], uappsMsg->pl_ptr[2],
-            //            uappsMsg->pl_ptr[3], uappsMsg->pl_ptr[4], uappsMsg->pl_ptr[5]);
             APP_Attribute_SetCCOMacAddress(uappsMsg->pl_ptr); /*记录plc模组入网的网关mac地址，后续状态上送需要用到*/
             break;
         default:
@@ -202,6 +201,7 @@ void APP_Tx_ProcessOfACKReceived(UappsMessage *uappsMsg)
         }
     }
 }
+
 void APP_ReadRecordFlag_Init(void)
 {
     APP_ReadPostFlag();

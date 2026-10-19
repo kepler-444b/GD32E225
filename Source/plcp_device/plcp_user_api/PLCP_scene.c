@@ -249,14 +249,14 @@ static fmc_state_enum APP_ReadLedSceneParameter(void)
 
     if (my_led_scene[3].scenes[0].scene_id == 0xFFFF) { // led_4 排气扇
         use_default_led_scenes = true;
-        my_led_scene[3].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴灯 同步
-        my_led_scene[3].scenes[1] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开 开
-        my_led_scene[3].scenes[2] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡 关
-        my_led_scene[3].scenes[3] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
-        my_led_scene[3].scenes[4] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇 同步
+        // my_led_scene[3].scenes[0] = (single_led_scene){0x0400, {0x01, 0x01}, {0x01, 0x00}}; // 卫浴灯 同步
+        my_led_scene[3].scenes[0] = (single_led_scene){0x0100, {0x01, 0x01}};               // 全开 开
+        my_led_scene[3].scenes[1] = (single_led_scene){0x0206, {0x01, 0x00}};               // 一键深睡 关
+        my_led_scene[3].scenes[2] = (single_led_scene){0x0300, {0x01, 0x00}};               // 全关
+        my_led_scene[3].scenes[3] = (single_led_scene){0x0014, {0x01, 0x01}, {0x01, 0x00}}; // 排气扇 同步
 
-        my_led_scene[3].scenes[5] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光 关
-        my_led_scene[3].scenes[6] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯 关
+        my_led_scene[3].scenes[4] = (single_led_scene){0x0200, {0x01, 0x00}, {0x01, 0x00}}; // 柔光 关
+        my_led_scene[3].scenes[5] = (single_led_scene){0x0009, {0x01, 0x00}, {0x01, 0x00}}; // 夜灯 关
     }
 
 #elif defined DEFAUTL_MIRROR_LINGHT_PANEL // 镜前灯

@@ -560,7 +560,6 @@ void MCU_Device_Factory(void)
 
     NVIC_SystemReset();
 }
- 
 
 /*****************************************************************************
 函数名称 : MCU_Device_ResetService
@@ -782,7 +781,7 @@ uint8_t MCU_Get_Ver(uint8_t *buf)
 {
     uint8_t ver[8] = {0x00, 0x00, 0x00, 0x01, 0x20, 0x26, 0x08, 0x1F};
 
-    memcpy(buf, ver, sizeof(ver));
+    memcpy(buf, ver, sizeof(ver)); 
     return sizeof(ver);
 }
 

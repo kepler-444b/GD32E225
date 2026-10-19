@@ -53,9 +53,9 @@ static panel_status_t my_panel_status[KEY_NUMBER] = {
 
 static common_panel_t my_common_panel;
 static adc_value_t my_adc_value;
-static volatile uint16_t timer_5s_count = 300;
+static volatile uint16_t timer_5s_count = 200;
 static volatile uint16_t timer_1s_count = 0;
-static volatile uint16_t timer_2s_count = 100;
+static volatile uint16_t timer_2s_count = 50;
 
 static void read_adc_value(void *arg);
 static void plcp_panel_tast(void *arg);
@@ -109,7 +109,8 @@ void plcp_panel_init(void)
     APP_PRINTF("plcp_panel_init\n");
     APP_PLCSDK_Init();
     sPost_flag = APP_Postflag_GetPointer();
-    CmdTest_MSE_McuVer();
+
+    CmdTest_MSE_McuVer(); // 写入软件版本
     plcp_panel_key_status(false);
 
     attr_led_state_table_recover(); // 读取LED控制状态
@@ -217,7 +218,6 @@ static void process_message_queue(void *arg)
 // 面板初始化状态机
 static void plcp_panel_tast(void *arg)
 {
-    // static uint16_t timer_5s_count = 500;
     timer_5s_count++;
 
     if (timer_5s_count >= 500) { // 5s 写产品信息
@@ -247,17 +247,22 @@ static void plcp_panel_tast(void *arg)
             MCU_Enable_Transmission();
         }
     }
-    if (sPost_flag->wtranferflag == 1 && get_my_mac != true) { // 查询CCO地址
+    if (sPost_flag->wtranferflag == 1 && get_my_mac != true) { // 获取自己的 mac
         if (!get_my_mac) {
             timer_1s_count++;
             if (timer_1s_count >= 100) {
                 timer_1s_count = 0;
-                CmdTest_MSE_GET_MAC();
-                get_my_mac = true;
+                uint8_t selfMacAddr[6];
+                memcpy(selfMacAddr, APP_Attribute_GetPointer()->selfMacAddr, 6);
+                if (selfMacAddr[0] == 0 && selfMacAddr[1] == 0 && selfMacAddr[2] == 0 && selfMacAddr[3] == 0 && selfMacAddr[4] == 0 && selfMacAddr[5] == 0) {
+                    CmdTest_MSE_GET_MAC();
+                } else {
+                    get_my_mac = true;
+                }
             }
         }
     }
-    if (get_my_mac == true && get_cco_mac != true) {
+    if (get_my_mac == true && get_cco_mac != true) { // 获取CCO 的 mac
         if (!get_my_mac) {
             timer_1s_count++;
             if (timer_1s_count >= 100) {
@@ -267,18 +272,20 @@ static void plcp_panel_tast(void *arg)
             }
         }
     }
-    if (get_my_mac == true) {
 
+    if (get_my_mac == true) {
         timer_2s_count++;
         if (timer_2s_count >= 200) {
 
             timer_2s_count = 0;
             CmdTest_MSE_GET_DID();
             CmdTest_MSE_GET_CC0MAC();
+
             if (APP_Attribute_GetPointer()->did != 0x0000) {
                 if (join_net == false) { // 由未入网变为入网
                     // plcp_panel_blink(false); // 关闭所有指示灯
                     switch_api_init();
+
                     join_net = true;
                 }
             } else {
@@ -286,8 +293,17 @@ static void plcp_panel_tast(void *arg)
                     join_net = false;   // 指示灯闪烁
                 }
             }
+
+            uint8_t selfMacAddr[6];
+            memcpy(selfMacAddr, APP_Attribute_GetPointer()->selfMacAddr, 6);
+
+            if (selfMacAddr[0] == 0 && selfMacAddr[1] == 0 && selfMacAddr[2] == 0 && selfMacAddr[3] == 0 && selfMacAddr[4] == 0 && selfMacAddr[5] == 0) {
+                // MAC 地址全为 0
+                // CmdTest_MSE_GET_MAC();
+            }
         }
     }
+
     if (join_net == false) {
 #if 0 // 不再闪烁
         led_blink_count++;
