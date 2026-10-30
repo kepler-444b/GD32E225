@@ -218,14 +218,14 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k1", "_close", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
         {"k2", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
         {"k2", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
-        {"k3", "_open", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
-        {"k3", "_close", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
         {"k4", "_open", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
         {"k4", "_close", "{\"rsl\":\"0100@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
         {"k5", "_open", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
         {"k5", "_close", "{\"rsl\":\"1400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
-        {"k6", "_open", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
-        {"k6", "_close", "{\"rsl\":\"1800@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"0004@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
     };
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
@@ -282,6 +282,28 @@ fmc_state_enum APP_ReadBindParameter(void)
         {"k5", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
         {"k6", "_open", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
         {"k6", "_close", "{\"rsl\":\"1200@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
+
+    uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
+
+#elif defined DEFAUTL_MIRROR_LINGHT_PANEL_SUITE // 亚朵4.0 套房 镜前灯
+    static const struct {
+        const char *aei;
+        const char *id;
+        const char *msg;
+    } default_configs[] = {
+
+        {"k1", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k1", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k2", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k2", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k3", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k3", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k4", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k4", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k5", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k5", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"},
+        {"k6", "_open", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_on\",\"data\":\"\"}"},
+        {"k6", "_close", "{\"rsl\":\"2400@SE202.FFFFFFFFFFFF/_off\",\"data\":\"\"}"}};
 
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 

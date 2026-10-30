@@ -80,7 +80,7 @@ static bool join_net = false;
 static bool led_blink = false;
 static uint16_t led_blink_count = 0;
 
-// #define PLCP_FACTORY // plcp 恢复出厂设置
+#define PLCP_FACTORY // plcp 恢复出厂设置
 
 void plcp_panel_init(void)
 {
@@ -305,7 +305,7 @@ static void plcp_panel_tast(void *arg)
     }
 
     if (join_net == false) {
-#if 0 // 不再闪烁
+#if 1 // 不再闪烁
         led_blink_count++;
         if (led_blink_count >= 100) {
             led_blink_count = 0;

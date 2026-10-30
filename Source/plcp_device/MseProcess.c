@@ -651,11 +651,13 @@ uint8_t APP_Group_TOPIC_MSEProcessing(UappsMessage *uappsMsg, RSL_t *rsl, uint8_
     }
     switch (i) {
     case DEVICE_STATE_ON_E: { // 控制群组开
-        APP_Device_GroupOn(uappsMsg, rsl->aei);
+        // APP_Device_GroupOn(uappsMsg, rsl->aei); // 2026.10.30 注释,奥莱维要求窗帘面板支持 _on
+        APP_Device_GroupOpen(uappsMsg, rsl);
         index++;
     } break;
     case DEVICE_STATE_OFF_E: { // 控制群组关
-        APP_Device_GroupOff(uappsMsg, rsl->aei);
+        // APP_Device_GroupOff(uappsMsg, rsl->aei);// 2026.10.30 注释,奥莱维要求窗帘面板支持 _off
+        APP_Device_GroupClose(uappsMsg, rsl);
         index++;
     } break;
 

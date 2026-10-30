@@ -25,14 +25,15 @@
 // ************************************* 默认配置 *************************************
 
 // 亚朵3.6
-#define DEFAUTL_CURTAIN_PANEL // 窗帘开 窗帘关 窗纱开 窗纱关
+// #define DEFAUTL_CURTAIN_PANEL // 窗帘开 窗帘关 窗纱开 窗纱关
 // #define DEFAUTL_CURTAIN_PANEL_MIRR // 窗帘关 窗帘开 窗纱关 窗纱开
-// #define DEFAUTL_DND_CLEAR_PANEL // 勿扰 清理 卫浴灯 排气扇
+#define DEFAUTL_DND_CLEAR_PANEL // 勿扰 清理 卫浴灯 排气扇
 // #define DEFAUTL_MIRROR_LINGHT_PANEL // 镜前灯
 // #define DEFAUTL_BALCONY_LIGHT_PANEL // 阳台灯
 // #define DEFAUTL_ALL_OPEN_BATH_PANEL // 全开|关 卫浴 柔光 夜灯
 // #define DEFAUTL_BATH_ALL_OPEN_PANEL // 卫浴 全开|关 夜灯 柔光
 
+// 亚朵3.6 套房
 // #define DEFAUTL_DND_CLEAR_PANEL_DOOR // 勿扰 清理 卫浴灯 排气扇(入门4键开关)
 // #define DEFAUTL_BATH_FAN_PANEL    // 卫浴 卫浴 排气扇 排气扇(主卫2键开关)
 // #define DEFAUTL_LIVING_SOFT_PANEL // 客厅灯 客厅灯 柔光 柔光
@@ -41,6 +42,8 @@
 // 亚朵4.0
 // #define DEFAUTL_MIRROR_LINGHT_PANEL_JY // 镜前灯
 // #define DEFAUTL_DND_CLEAR_PANEL_JY // 勿扰 清理 卫浴灯 排气扇
+
+// #define DEFAUTL_MIRROR_LINGHT_PANEL_SUITE // 镜前灯(套房)
 
 // 亚朵(新野)
 // #define DEFAUTL_AROM_LINGHT_PANEL // 香薰灯
@@ -59,13 +62,13 @@
 #elif defined PLCP_LIGHT_CT
 // #define PWM_HIGH   // pwm高电平有效6
 
-#define DEFAUTL_MIRROR_LIGHT_CT // 台盆镜灯
+// #define DEFAUTL_MIRROR_LIGHT_CT // 台盆镜灯
 // #define DEFAUTL_BED_LIGHT_CT_L // 床头花灯(左)
-// #define DEFAUTL_BED_LIGHT_CT_R // 床头花灯(右)
+#define DEFAUTL_BED_LIGHT_CT_R // 床头花灯(右)
 
-#define DEV_TYPE                0x17 // 产品类型(双色温灯驱)
+#define DEV_TYPE               0x17 // 产品类型(双色温灯驱)
 
-#define KEY_NUMBER              1
+#define KEY_NUMBER             1
 #else
 
 #endif
