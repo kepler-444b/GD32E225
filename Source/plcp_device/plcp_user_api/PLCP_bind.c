@@ -285,7 +285,7 @@ fmc_state_enum APP_ReadBindParameter(void)
 
     uint8_t config_count = sizeof(default_configs) / sizeof(default_configs[0]);
 
-#elif defined DEFAUTL_MIRROR_LINGHT_PANEL_SUITE // 亚朵4.0 套房 镜前灯
+#elif defined DEFAUTL_MIRROR_LINGHT_PANEL_SUITE || defined DEFAUTL_MIRROR_LINGHT_PANEL_SUITE_3_6 // 亚朵4.0 套房  亚朵3.6 套房 镜前灯
     static const struct {
         const char *aei;
         const char *id;
